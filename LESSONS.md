@@ -13,6 +13,11 @@ Mẫu mục:
 
 ---
 
+## Đăng YouTube bằng Claude in Chrome (19/11/2026, bánh xèo 40s)
+- Chạy suôn: `studio.youtube.com/channel/UCqg4Ipce2Li0nn43_1eXwHg/videos/upload?d=ud` → `find` ô `file input` → `file_upload` bản `*-up.mp4` (<10 MB) → tiêu đề (triple_click rồi gõ) → mô tả → bấm vùng trống để tắt popup hashtag → `find` radio "No, it's not made for kids" + "Show more" → `find` "No, AI wasn't used" + ô Tags (gõ có dấu phẩy cuối) → Next ×3 → Public → Publish → link ở hộp "Video published".
+- Gõ mô tả dài báo timeout CDP 30 s nhưng **vẫn gõ xong**; đợi vài giây rồi chụp lại kiểm. Cờ 🇬🇧/🇻🇳 hiện thành chữ "GB/VN" trên Windows (không sao).
+- Kiểm radio bằng JS: `[...document.querySelectorAll('tp-yt-paper-radio-button')].filter(r=>r.hasAttribute('checked'))`. Mở link Short, `video.pause()` rồi đóng tab.
+
 ## Demo 15s bánh xèo, do **Sonnet làm một mình** (`demo15/`, 19/11/2026): thử xem Sonnet có làm được không
 - **Kết quả (Claude tự đánh giá, chờ người dùng xem):** làm được trọn vẹn từ code đến MP4 15s (7 shot, chữ song ngữ, âm thanh kiểu Bánh mì) trong một phiên, không dùng subagent Opus. Chất lượng bằng bản 40s ở các cảnh dùng lại props (đổ bột, gấp bánh, đĩa hero, CTA); vẫn có điểm yếu cũ: tay/mặt cartoon, cuộn lá hơi giống ống.
 - **Cách làm nhanh:** copy `banhxeo40/` (props + `overlay.js`), viết 1 file `shots.js` gọn cho cả video thay vì A/B/C; âm thanh = `_build_audio.js` ghép **engine + master của `banhmi/audio.js`** (dòng 1–749 và 938–1075) với một `_score.txt` mới → chỉ phải viết phần score (cue theo giây trên hình), ~1 giây render. Cách này nên dùng cho mọi video: không viết lại engine.

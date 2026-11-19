@@ -101,7 +101,7 @@
 | Bánh xèo miền Tây (70s, swing manouche gypsy jazz 125 BPM) | `D:\DishTales-hoathinh\banhxeo\` | https://youtube.com/shorts/M6Z5NM3uU-U (hẹn 23:00 25/11) | hẹn 23:00 25/11 trên TikTok Studio (link có sau khi đăng) |
 | Cá lóc nướng trui (70s, Mekong spaghetti western 90 BPM) | `D:\DishTales-hoathinh\caloc\` | https://youtube.com/shorts/EZm9oJLY3Bc (hẹn 23:00 26/11) | hẹn 23:00 26/11 trên TikTok Studio (link có sau khi đăng) |
 | Cơm tấm Sài Gòn (68s, Saigon city-pop/disco-funk 112.5 BPM) | `D:\DishTales-hoathinh\comtam\` | https://youtube.com/shorts/l-HAUfiq6Eo (công khai ngay 19/11, người dùng dặn "up và public ngay") | chưa đăng (lần này người dùng chỉ yêu cầu YouTube) |
-| Bánh xèo miền Tây bản 40s điện ảnh (ethereal folk 72 BPM, đàn tranh + sáo + đàn bầu) | `banhxeo40/` (máy làm: `C:\Users\Admin\OneDrive\Desktop\hh3d\banhxeo40\`) | chưa đăng | chưa đăng |
+| Bánh xèo miền Tây bản 40s điện ảnh (ethereal folk 72 BPM, đàn tranh + sáo + đàn bầu) | `banhxeo40/` (máy làm: `C:\Users\Admin\OneDrive\Desktop\hh3d\banhxeo40\`) | https://youtube.com/shorts/6FqwrYZXUS8 (công khai ngay 19/11, người dùng dặn "up public") | chưa đăng |
 
 ## Ghi chú đăng bài (18/11/2026)
 - Giờ hẹn chuẩn cho video 90s: **23:00 giờ VN** (= 11:00 sáng miền Đông Mỹ, 16:00 giờ Anh; né 02:00/07:00/21:00 của loạt Shorts kia và 6:30/9:30/12:00 trên TikTok). Bánh tráng trộn: không kịp đăng 23:00 ngày 18/11. Người dùng chọn làm kỹ rồi hẹn sau, vào giờ đẹp gần nhất không trùng lịch (dự kiến 19:00 ngày 19/11, trước bún chả 23:00). Các video sau vẫn theo quy tắc cũ: mỗi ngày một video lúc 23:00, nối tiếp ngày cuối đã hẹn (phở 22/11). Vậy nem nướng 23/11, rồi hàng chờ từ 24/11.
