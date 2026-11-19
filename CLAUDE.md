@@ -33,7 +33,7 @@
 **Ưu tiên cao nhất: âm thanh theo kiểu `banhmi/audio.js`** (người dùng rất thích, 19/11/2026). Mỗi video mới: lập cue sheet từng giây theo sự kiện trên hình, mỗi hành động một tiếng riêng, pan theo chuyển động, duck nhạc dưới SFX, im lặng trước cú cắn, và để người dùng nghe thử trước khi đăng.
 
 ## Phong cách người dùng thích
-- **Độ dài: 1:00–1:40, tự cân đối** (người dùng dặn 19/11/2026, nới quy tắc "1:20–1:40"). Từ hủ tiếu trở đi làm khoảng **66–72 giây** (~20–22 cảnh, 4 hồi, CTA ~5 giây cuối) cho nhanh; nem nướng giữ 90 giây vì đã dựng xong khung. Cấu trúc tham khảo `PLAN-CHUNG-90s.md` (rút gọn các hồi). Video cũ 30s/45s/60s chỉ là mẫu code.
+- **Độ dài: 50–70 giây, tự phân phối theo món và theo cảnh** (người dùng dặn 19/11/2026, thay quy tắc "1:00–1:40" cũ). Món ít bước/ít chuyện thì ~50 s; món nhiều bước + có gag hài thì ~60–70 s. Không cần hỏi lại, tự cân đối cho hợp. CTA ~5 giây cuối. Cấu trúc tham khảo `PLAN-CHUNG-90s.md` (rút gọn các hồi). Video 90 s cũ (bún chả, bột chiên, nem nướng…) và 30s/45s/60s chỉ là mẫu code. Kèm theo: kịch bản luôn có **các bước làm món + 1–2 gag hài khách Tây – người bán**.
 - **Cuối mọi video có đoạn kêu gọi LIKE + FOLLOW** (84.5–90s: nút tim + nút FOLLOW được bấm, chữ song ngữ "Thấy ngon thì LIKE & FOLLOW nhé!" / "Hungry? LIKE & FOLLOW for more!" + câu hỏi comment).
 - Nén để tải lên (giới hạn 10 MB/lần qua Claude in Chrome): 90s dọc → video ~720k + audio aac 96k, `GRAIN = 0.05`.
 - Kênh nhắm **người xem nước ngoài** (Mỹ/Âu): tiêu đề/mô tả **tiếng Anh trước**, tiếng Việt sau.

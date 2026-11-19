@@ -19,7 +19,8 @@ Node + @napi-rs/canvas (1080x1920, 30 fps) + ffmpeg-static. Hình và âm thanh 
 2. **Mọi chữ trên video song ngữ** (Việt to vàng kem, Anh nhỏ trắng), trong vùng an toàn x 70–930, y < 1560. Chữ vẽ ở `overlay.js` (xem `banhxeo40/`), không vẽ trong shot.
 3. **Cuối mọi video có LIKE + FOLLOW** (tim + nút follow được bấm, chữ song ngữ, câu hỏi comment).
 4. **Mỗi video một kiểu nhạc khác** (BPM, nhạc cụ, groove); cắt cảnh trên nhịp của nhạc đó.
-5. **Kịch bản gồm các bước làm món + vài gag hài giữa khách Tây và người bán** (bánh xèo 40s thiếu hai thứ này nên bị đòi làm lại; đưa vào plan ngay từ đầu).
+5. **Độ dài 50–70 giây, tự phân phối theo món và cảnh** (ít bước ~50 s, nhiều bước + gag ~60–70 s).
+   **Kịch bản gồm các bước làm món + vài gag hài giữa khách Tây và người bán** (bánh xèo 40s thiếu hai thứ này nên bị đòi làm lại; đưa vào plan ngay từ đầu).
 6. **Dùng lại nhân vật có sẵn**, đổi màu qua tùy chọn `o`, đừng viết lại hàm. Khách Tây tóc vàng xuyên suốt, luôn dùng bản `caphe/people.js`.
 7. **Xem ảnh xem trước (`--sheet`) và sửa 2–3 vòng trước khi render đủ.** Cảnh cận tay/mặt kiểu cartoon, lá cuốn, tôm thịt là chỗ hay kém đẹp.
 8. **Chia việc cho subagent theo độ khó**: vẽ, nhạc, debug → `opus`; việc nhẹ → `sonnet`, luôn kiểm tra lại. Hai agent vẽ chung video phải chốt trước vị trí match cut.

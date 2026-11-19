@@ -13,6 +13,9 @@ Mẫu mục:
 
 ---
 
+## Quy tắc độ dài (người dùng chốt 19/11/2026)
+- **50–70 s, tự phân phối theo món/cảnh.** Gợi ý của Claude: 35–50 s là điểm ngọt cho Shorts món ăn (xem hết nhiều, dễ được xem lại); trên 60 s dễ rớt người xem giữa chừng → gom các bước nhẹ vào một cảnh, giữ 2 gag mạnh nhất. Khi có số liệu giữ chân (YouTube Studio → % xem trung bình) thì ghi vào đây và chỉnh lại khoảng này.
+
 ## Bánh xèo miền Tây 40s điện ảnh (`banhxeo40/`, 19/11/2026)
 - **Người dùng khen:** chất lượng hình rất tốt. **Ưng nhất vẫn là âm thanh kiểu `banhmi/audio.js`** → xem `AUDIO-SYNC-GUIDE.md`, ưu tiên làm âm thanh theo kiểu đó.
 - **Người dùng đòi thêm (chưa làm xong):** các bước làm món (①–⑨) và vài tình huống hài giữa khách Tây và người bán (người bán chỉ cách ăn; khách Tây tới quán thử món). Bản nháp ở `banhxeo40/_v2wip/`. **Lần sau hỏi/đưa ngay các bước + 1–2 gag vào plan từ đầu**, đừng làm bản không bước rồi mới thêm.
