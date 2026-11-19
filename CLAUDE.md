@@ -54,6 +54,10 @@
 **Mẫu video điện ảnh 66s** (kịch bản 21 cảnh, 11 chuyển động máy, công thức âm thanh): xem `PLAN-VIDEO-DIEN-ANH.txt`.
 **Còn thiếu nhạc đã dùng** của bún mắm, bún đậu, bún chả, bột chiên, mì xào giòn trong bảng video: xem `audio.js` của từng thư mục nếu cần tránh trùng.
 
+## Git (đồng bộ giữa các máy)
+- Repo riêng tư: https://github.com/1151tt0209/dishtales-toolkit (nhánh main). Máy mới: `git clone <link>`, rồi `npm install` trong thư mục video cần làm. Repo chỉ chứa code, kịch bản, CLAUDE.md; không có video/wav/ảnh preview/node_modules.
+- Làm xong video mới: `git add -A && git commit -m "<tên video>" && git push` trong `D:DishTales-hoathinh` để repo luôn mới nhất.
+
 ## Đăng bài
 - Kênh đã có loạt Shorts khác hẹn mỗi ngày (từ 20/11) và TikTok có bài lúc 6:30/9:30/12:00 hằng ngày → video mới hẹn giờ né các mốc đó, cách video trước 2–3 tiếng, giờ đẹp (11:30, 19:00, 21:00...).
 - YouTube: kênh "Dish Tales" @DishTalesShorts (Studio channel id UCqg4Ipce2Li0nn43_1eXwHg). TikTok: @hoainiemxuacu12 ("Những Ngày Xưa Cũ"), đăng qua tiktok.com/tiktokstudio/upload.
