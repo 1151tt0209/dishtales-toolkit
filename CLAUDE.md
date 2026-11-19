@@ -19,6 +19,10 @@
     - `text.js` (chữ song ngữ, tựa đề, end card), `shotsA.js` + `shotsB.js` (17 cảnh), `shots.js` (mốc thời gian), `render.js`, `audio.js`.
 - Lệnh: `node render.js --sheet all` (xem trước 1 khung mỗi cảnh) · `node render.js --sheet 1.5,7.2 ten.png` · `node render.js` (render đủ + ghép `audio.wav`) · `node audio.js`.
 - Luôn xem ảnh xem trước, sửa lỗi rồi mới render đủ.
+- `banhxeo40/`: bánh xèo bản **40s quảng cáo điện ảnh** (không hài), làm theo prompt 6 cảnh của người dùng (19/11/2026), dùng lại props của `banhxeo/`. Hai điểm mới đáng dùng lại:
+  - **`overlay.js`**: toàn bộ chữ vẽ ở một chỗ, sau khi chỉnh màu (shot không tự vẽ chữ). Đổi chữ/thời gian không cần đụng code shot. `render.js --notext` để xem hình không chữ.
+  - Shot nhận **"T ảo"** (`shots.js` của `_v2wip/`): kéo dài video, chèn shot mới mà không phải sửa shot cũ.
+  - `_v2wip/`: bản ~58s đang dừng (thêm các bước ①–⑨ + 4 cảnh hài khách Tây – Má Tư chỉ cách ăn), xem README trong đó. `BRIEF-shots.md` nhắc `_old70/` = thư mục `banhxeo/`.
 
 ## Phong cách người dùng thích
 - **Độ dài: 1:00–1:40, tự cân đối** (người dùng dặn 19/11/2026, nới quy tắc "1:20–1:40"). Từ hủ tiếu trở đi làm khoảng **66–72 giây** (~20–22 cảnh, 4 hồi, CTA ~5 giây cuối) cho nhanh; nem nướng giữ 90 giây vì đã dựng xong khung. Cấu trúc tham khảo `PLAN-CHUNG-90s.md` (rút gọn các hồi). Video cũ 30s/45s/60s chỉ là mẫu code.
@@ -88,6 +92,7 @@
 | Bánh xèo miền Tây (70s, swing manouche gypsy jazz 125 BPM) | `D:\DishTales-hoathinh\banhxeo\` | https://youtube.com/shorts/M6Z5NM3uU-U (hẹn 23:00 25/11) | hẹn 23:00 25/11 trên TikTok Studio (link có sau khi đăng) |
 | Cá lóc nướng trui (70s, Mekong spaghetti western 90 BPM) | `D:\DishTales-hoathinh\caloc\` | https://youtube.com/shorts/EZm9oJLY3Bc (hẹn 23:00 26/11) | hẹn 23:00 26/11 trên TikTok Studio (link có sau khi đăng) |
 | Cơm tấm Sài Gòn (68s, Saigon city-pop/disco-funk 112.5 BPM) | `D:\DishTales-hoathinh\comtam\` | https://youtube.com/shorts/l-HAUfiq6Eo (công khai ngay 19/11, người dùng dặn "up và public ngay") | chưa đăng (lần này người dùng chỉ yêu cầu YouTube) |
+| Bánh xèo miền Tây bản 40s điện ảnh (ethereal folk 72 BPM, đàn tranh + sáo + đàn bầu) | `banhxeo40/` (máy làm: `C:\Users\Admin\OneDrive\Desktop\hh3d\banhxeo40\`) | chưa đăng | chưa đăng |
 
 ## Ghi chú đăng bài (18/11/2026)
 - Giờ hẹn chuẩn cho video 90s: **23:00 giờ VN** (= 11:00 sáng miền Đông Mỹ, 16:00 giờ Anh; né 02:00/07:00/21:00 của loạt Shorts kia và 6:30/9:30/12:00 trên TikTok). Bánh tráng trộn: không kịp đăng 23:00 ngày 18/11. Người dùng chọn làm kỹ rồi hẹn sau, vào giờ đẹp gần nhất không trùng lịch (dự kiến 19:00 ngày 19/11, trước bún chả 23:00). Các video sau vẫn theo quy tắc cũ: mỗi ngày một video lúc 23:00, nối tiếp ngày cuối đã hẹn (phở 22/11). Vậy nem nướng 23/11, rồi hàng chờ từ 24/11.
