@@ -1,0 +1,276 @@
+=====================================================================
+ SKILL: LÀM VIDEO HOẠT HÌNH "ĐIỆN ẢNH" BẰNG CODE + ĐĂNG YOUTUBE/TIKTOK
+ (Rút ra từ dự án "GIÒN – Bánh Mì Việt Nam", thư mục banhmi/)
+=====================================================================
+
+MỤC ĐÍCH
+--------
+Làm một video hoạt hình 2D ngắn (15–60s) nhìn như quảng cáo điện ảnh:
+góc quay xa/gần, từng nguyên liệu/chi tiết có shot riêng, ánh sáng đẹp,
+nhạc + tiếng động khớp từng nhát cắt, rồi đăng công khai lên YouTube
+Shorts và TikTok với mô tả song ngữ Việt–Anh.
+
+Toàn bộ hình và tiếng đều được TẠO BẰNG CODE (Node.js), KHÔNG cần
+dịch vụ AI tạo video trả phí, không tải asset từ ngoài.
+  - Hình: @napi-rs/canvas vẽ từng khung hình -> pipe vào ffmpeg.
+  - Tiếng: JS thuần tổng hợp sóng âm -> ghi WAV.
+  - Ghép: ffmpeg-static (npm), không cần cài ffmpeg vào máy.
+
+Khi nào KHÔNG dùng cách này: khi người dùng cần hình 3D/như thật
+(photorealistic) -> dùng model video AI (Veo/Kling qua Weave, cần
+tài khoản đã liên kết + tốn credit, phải báo giá và xin duyệt).
+
+
+=====================================================================
+ QUY TRÌNH TỔNG (9 BƯỚC)
+=====================================================================
+
+BƯỚC 1 – VIẾT KỊCH BẢN KIỂU ĐẠO DIỄN
+------------------------------------
+Đóng vai đạo diễn, viết trước khi code:
+  - Tên phim + 1 câu ý tưởng (vd: "từ lò bánh lúc bình minh đến miếng
+    cắn đầu tiên").
+  - Cấu trúc 3 HỒI, nhịp tăng dần:
+      Hồi I  (≈25%) mở màn: tĩnh, bí ẩn, shot dài ~2s, máy chậm.
+      Hồi II (≈60%) "nghi lễ": mỗi chi tiết/nguyên liệu = 1 shot
+              riêng 1–1.5s, cắt theo nhịp trống.
+      Hồi III(≈15%) cao trào: bùng nổ -> im lặng 0.5s -> hành động
+              cuối (miếng cắn) -> dừng hình -> tiêu đề.
+  - BẢNG PHÂN CẢNH: mỗi shot ghi thời gian, cỡ cảnh (toàn rất xa /
+    toàn / trung / cận / đặc tả / macro / top-down), chuyển động máy
+    (crane, dolly-in, pull-back, orbit 180°, whip pan, rack focus,
+    speed ramp), nội dung, âm thanh.
+  - Luật: KHÔNG có 2 shot liền nhau cùng cỡ cảnh / cùng chuyển động.
+    Xen kẽ xa -> gần -> siêu cận.
+  - Mở màn bằng "hook" âm thanh: màn đen + 1 tiếng đặc trưng (vd
+    tiếng vỏ bánh nứt "rắc").
+  - Chốt TEMPO (vd 120 BPM = 0.5s/beat) và đặt MỌI điểm cắt shot
+    đúng lên beat. Ghi danh sách thời điểm cắt -> dùng chung cho
+    cả hình lẫn tiếng.
+
+BƯỚC 2 – DỰNG TOOLCHAIN
+-----------------------
+  mkdir <tenduan> && cd <tenduan>
+  npm init -y
+  npm install @napi-rs/canvas ffmpeg-static
+Kiểm tra: ctx.filter ('blur(px)'), globalCompositeOperation
+(screen/lighter/overlay/soft-light/destination-out), canvas.data()
+(lấy raw RGBA), ctx.letterSpacing đều hoạt động.
+Font có dấu tiếng Việt trên Windows: georgiab.ttf (tiêu đề serif),
+segoeui.ttf / segoeuib.ttf (chữ thường) – đăng ký bằng
+GlobalFonts.registerFromPath(...).
+
+BƯỚC 3 – CHIA VIỆC SONG SONG
+----------------------------
+  - Nhạc + tiếng động: giao 1 subagent OPUS chạy nền (việc khó), đưa
+    "cue sheet" chi tiết (xem Bước 5). Nó chỉ được ghi audio.js /
+    audio.wav, không đụng file khác.
+  - Hình: tự làm (cần giữ phong cách nhất quán, không nên chia cho
+    nhiều agent).
+  - Việc đơn giản nhiều bước (kiểm tra file, đổi text hàng loạt) ->
+    Sonnet. Việc 1 lệnh -> tự làm luôn.
+
+BƯỚC 4 – CODE HÌNH (3 FILE)
+---------------------------
+lib.js    – công cụ dùng chung
+shots.js  – mỗi shot 1 hàm draw(ctx, lt, p, T)
+render.js – vòng lặp khung hình, hậu kỳ, xuất ffmpeg, các chế độ xem trước
+
+(a) Kích thước & khung điện ảnh
+    W=1920, H=1080, 30fps. Viền đen trên/dưới BAR=138px để ra tỉ lệ
+    2.39:1 (cinemascope). Vùng nội dung y = 138..942.
+
+(b) Nguyên tắc vẽ "tất định theo thời gian"
+    Mọi thứ là HÀM CỦA THỜI GIAN, không giữ trạng thái giữa các frame
+    -> render được bất kỳ frame nào, xem trước nhanh.
+    - Random có seed: mulberry32 (rng(seed)). KHÔNG dùng Math.random.
+    - Hạt (vụn bánh, bột, giọt nước): vị trí = gốc + v*t + 0.5*g*t²
+      tính từ tuổi (t - t0).
+    - Easing: inOut (cubic), out, in, outBack (nảy), outExpo (bùng rồi
+      chậm dần = cảm giác "slow-mo/freeze").
+    - wobble(t): tổng vài sin lệch pha = dao động mềm (lửa chập chờn).
+
+(c) "Máy quay" trong 2D
+    cam(ctx, cx, cy, zoom, rot, fn): đặt điểm thế giới (cx,cy) vào giữa
+    màn hình, scale theo zoom. Từ đó giả lập:
+      - Dolly-in / push: zoom tăng nhẹ 1.0 -> 1.15–1.3 suốt shot.
+      - Crane down: cy tăng dần + các lớp nền dịch khác nhau (parallax).
+      - Pull-back reveal: zoom từ 6 -> 1 (vật nhỏ trong thế giới lớn,
+        vẽ vector nên phóng to không vỡ).
+      - Orbit: vật đi trên quỹ đạo elip, depth = sin(góc) -> scale +
+        thứ tự vẽ (sort theo depth) + vật sau bị blur.
+      - Lật 3D giả: scaleX = cos(góc quay) (đĩa chả, khoanh ớt).
+      - Whip pan: vẽ cảnh vào buffer phụ rồi chồng nhiều bản lệch ngang
+        với alpha giảm dần (motionBlurX) + dịch mạnh 2000px trong 0.4s.
+        Shot sau "whip vào" từ phía ngược lại -> nối cảnh mượt.
+      - Rack focus: ctx.filter='blur(Npx)' cho tiền cảnh tăng dần, hậu
+        cảnh giảm dần.
+      - Speed ramp: rơi nhanh (ease.in) rồi lát cuối dùng đường cong
+        chậm hơn + rung máy nhẹ khi chạm.
+      - Rung máy khi va chạm: shake(T, [các mốc va chạm], biên độ,
+        tắt dần) cộng vào tâm camera.
+
+(d) Thư viện vật thể (vẽ vector, tái dùng nhiều shot)
+    - Profile vật thể bằng hàm toán: ổ bánh mì = trên (1-|u|^3.2)^0.55,
+      dưới phẳng hơn (1-|u|^5)^0.4 -> polygon 80 điểm.
+    - Tô gradient 3 tầng (sáng trên -> giữa -> tối dưới) + làm tối 2 đầu
+      + đốm (specks) + vết rạch sáng + "shine" (ellipse trắng, mode
+      screen).
+    - Vật cắt đôi: clip theo đường cắt, nửa trên dịch/xoay lên.
+    - Lớp nhân xếp chồng: band() = dải lượn sóng sin, mỗi lớp 1 gradient.
+    - Lá ngò: polar r(θ)=s*(0.62+0.38|cos1.5θ|)*(1+0.07sin11θ) + gân.
+    - Dùng chung 1 hàm drawSandwich(ctx, L, T, {n: số lớp, gap, top,
+      bottom}) -> cảnh nào cũng nhất quán, tăng n theo tiến trình.
+
+(e) Ánh sáng & không khí (làm nên chất "điện ảnh")
+    - glow(): radial gradient, mode 'screen'.
+    - flare(): quầng sáng + vệt anamorphic ngang xanh (ellipse dẹt
+      scale(1,0.018)) + vài "bóng ma" tròn hướng về tâm khung.
+    - godRays(): các tam giác gradient tỏa từ 1 điểm, mode 'screen',
+      nhấp nháy nhẹ theo t.
+    - dust(): bụi lơ lửng lấp lánh; steam(): hơi nước bay lên, phồng
+      to, mờ dần; bokeh(): vòng tròn nhòe nền.
+    - Nền: radial gradient ấm ở giữa -> gần đen ở rìa.
+
+(f) Hậu kỳ mỗi frame (render.js)
+    1. Grade: soft-light gradient (trên cam ấm, dưới xanh teal).
+    2. Vignette (radial tối rìa, vẽ sẵn 1 lần).
+    3. Flash trắng-ấm 0.25s tại các beat lớn (lúc nhạc vào, cao trào,
+       miếng cắn).
+    4. Grain phim: 4 tấm noise 960x540 tạo sẵn, xoay vòng, overlay 9%.
+    5. Viền đen letterbox (tắt ở bản dọc).
+
+(g) Xuất video
+    ffmpeg -f rawvideo -pix_fmt rgba -s 1920x1080 -r 30 -i -
+           -c:v libx264 -preset slow -crf 17 -pix_fmt yuv420p
+           -movflags +faststart video_noaudio.mp4
+    Ghi canvas.data() vào stdin, tôn trọng backpressure (await 'drain').
+    Sau đó ghép tiếng: -i video -i audio.wav -c:v copy -c:a aac -b:a 256k
+    900 frame 1080p mất khoảng 3–5 phút -> chạy nền (run_in_background).
+
+BƯỚC 5 – NHẠC & TIẾNG ĐỘNG (giao Opus)
+--------------------------------------
+Brief cho subagent phải có:
+  - Định dạng: WAV 48kHz stereo 16-bit, đúng N giây, JS thuần, PRNG có
+    seed, tự viết RIFF header, đỉnh ≤ -1 dBFS, mọi nốt/SFX có fade
+    chống "click".
+  - Tempo + danh sách mốc cắt shot (đều rơi trên beat).
+  - Chất liệu Việt: đàn bầu (sine + ít hài âm, luyến cao độ 1–3 cung,
+    vibrato rộng dần), đàn tranh (Karplus–Strong), thang ngũ cung
+    (vd D–F–G–A–C), reverb kiểu Freeverb cho sang.
+  - Cue sheet TỪNG GIÂY: tiếng gì, lúc nào, to/nhỏ ra sao. Mỗi nguyên
+    liệu một tiếng riêng (quẹt, "bộp", chặt dao, xèo xèo, "tách", tiếng
+    rắc, "ting" lấp lánh…).
+  - Dramaturgy: Hồi I nhỏ; Hồi II beat vào đúng mốc; có 1 khoảng "hụt
+    hơi" (nhạc giảm nửa) trước cao trào; IM LẶNG TUYỆT ĐỐI 0.5s; tiếng
+    hành động cuối là tiếng TO NHẤT phim; nốt kết ngân rồi tắt hẳn.
+  - Ducking nhạc dưới SFX, limiter true-peak.
+  - Yêu cầu báo cáo: peak/RMS/LUFS từng hồi (đo bằng ffmpeg ebur128 /
+    astats). Lưu ý: agent không nghe được -> nhắc người dùng nghe thử.
+
+BƯỚC 6 – XEM TRƯỚC & SỬA (quan trọng nhất cho chất lượng)
+---------------------------------------------------------
+render.js có các chế độ:
+  node render.js --sheet                -> 1 frame giữa mỗi shot, ghép
+                                           lưới 3 cột (previews/sheet.png)
+  node render.js --sheet 0.4,2.2,... x.png -> frame tùy chọn (chỗ chuyển
+                                           cảnh, đầu/cuối shot)
+  node render.js --stills 5.0,19.5      -> PNG lẻ full-size
+Xem ảnh, sửa, lặp lại 2–3 vòng TRƯỚC khi render full. Lỗi đã gặp:
+  - Nhà cửa che mất mặt trời -> hạ chiều cao lớp nhà, đưa mặt trời lên.
+  - Pate trông như khúc gỗ (do vệt sáng song song) -> tô phẳng + đốm
+    loang + vài chấm bóng ngẫu nhiên.
+  - Chả lụa trắng như cái đĩa -> màu be hồng đậm hơn, viền nâu.
+  - Vật bị cắt mất vào viền đen letterbox -> dời vào vùng 138..942.
+  - Tiêu đề đè lên vật chính -> hạ + thu nhỏ vật khi chữ hiện, phủ
+    gradient tối phần trên.
+  - Vụn bánh trắng vuông trông như giấy vụn -> dùng toàn tông vỏ bánh.
+Sau render full: trích vài frame từ MP4 + volumedetect để xác nhận.
+
+BƯỚC 7 – BẢN DỌC 9:16 CHO SHORTS / TIKTOK
+-----------------------------------------
+YouTube chỉ coi là Short khi video dọc/vuông. Bố cục đã dùng:
+  - Canvas 1080x1920. Render frame 16:9 KHÔNG viền đen.
+  - Nền: chính frame đó thu nhỏ 96x170 rồi phóng to + blur(45px) + phủ
+    tối 55% (blur nhỏ 6px sẽ bị vỡ ô -> phải ~45px).
+  - Giữa: frame scale cao 760px, cắt bớt 2 bên còn rộng 1080, viền vàng
+    mảnh trên/dưới, y=560.
+  - Trên: tiêu đề vàng (VI) + dòng phụ (EN). Dưới khung: "Cách làm … ·
+    How it's made". Tránh 25% đáy (UI của app che).
+  - Tắt tiêu đề trên khi phim tự hiện tiêu đề cuối (tránh trùng); thu
+    nhỏ font tiêu đề trong phim để không bị cắt 2 bên (global.VERTICAL).
+  Lệnh: node render.js --vertical  (xem trước: --vstill 5,19.5,29.4)
+
+BƯỚC 8 – NÉN ĐỂ TẢI LÊN (giới hạn 10 MB của công cụ upload Chrome)
+-----------------------------------------------------------------
+Claude-in-Chrome file_upload chỉ nhận ≤ 10 MB/lần. Nén 2-pass:
+  ffmpeg -i in.mp4 -c:v libx264 -preset slow -b:v 2250k -pass 1 -an -f null NUL
+  ffmpeg -i in.mp4 -c:v libx264 -preset slow -b:v 2250k -maxrate 3000k
+         -bufsize 6000k -pass 2 -pix_fmt yuv420p -c:a aac -b:a 128k
+         -movflags +faststart out-upload.mp4
+  (30s -> ~8.9 MB, vẫn 1080x1920.) Video dài hơn -> giảm bitrate theo
+  công thức: bitrate ≈ 9.5MB*8 / thời lượng(s) - 128k.
+
+BƯỚC 9 – ĐĂNG BÀI (dùng Chrome của người dùng, không dùng browser pane)
+---------------------------------------------------------------------
+Chuẩn bị metadata song ngữ (lưu file youtube-metadata.md trong dự án):
+  - Tiêu đề (≤100 ký tự): EN trước cho kênh quốc tế + VI + #shorts.
+    Mẫu: "Vietnamese Bánh Mì 🇻🇳 How It's Made in 30 Seconds | Bánh Mì
+    Việt Nam #shorts"
+  - Mô tả: 2 câu hook (EN + VI) / các bước 🇬🇧 HOW IT'S MADE + 🇻🇳 CÁCH
+    LÀM / slogan song ngữ / câu hỏi kéo comment 2 thứ tiếng / lời mời
+    đăng ký 2 thứ tiếng / hashtag Việt + quốc tế (#shorts ở 3 tag đầu).
+  - Tags: cả có dấu, không dấu, tiếng Anh.
+YouTube Studio (studio.youtube.com/channel/<id>/videos/upload?d=ud):
+  1. find "file input" -> file_upload (không click nút chọn file).
+  2. Tiêu đề: click, ctrl+a, type. Mô tả: click, type (gõ dài có thể
+     báo timeout nhưng vẫn gõ xong -> chờ 5s rồi chụp lại để kiểm).
+  3. Bấm ra chỗ trống để tắt popup gợi ý hashtag.
+  4. "No, it's not made for kids".
+  5. Show more -> AI use: hoạt hình cách điệu, nhạc nền không phải trọng
+     tâm -> "No" (nếu có người/cảnh như thật hoặc nhạc AI là trọng tâm
+     -> "Yes"). Báo lại người dùng lựa chọn này.
+  6. Tags (gõ cách nhau bởi dấu phẩy), Category: Film & Animation.
+  7. Next x3 -> Public -> Publish -> lấy link /shorts/<id>.
+TikTok Studio (tiktok.com/tiktokstudio/upload):
+  1. file_upload vào input file.
+  2. Popup "Bật kiểm tra nội dung tự động?" -> Hủy (không tự đổi cài
+     đặt tài khoản); tooltip "Đã hiểu" -> đóng.
+  3. Ô mô tả (combobox contenteditable): ctrl+a, Delete, type caption
+     song ngữ (giới hạn 4000 ký tự), hashtag gõ sau cùng, có dấu cách.
+  4. Thời điểm: Bây giờ; Ai xem: Mọi người -> bấm "Đăng".
+  5. Lúc đầu hiện "Chỉ mình tôi – Nội dung đang được xét duyệt"; vài
+     chục giây sau tải lại trang Bài đăng -> thành "Mọi người".
+  6. Lấy link: find link có "/video/" trong trang Bài đăng.
+Kiểm tra cuối: mở link Short xem có phát được không (rồi TẠM DỪNG để
+không phát tiếng trong máy người dùng); kiểm tra TikTok đã "Mọi người".
+LUÔN báo tên tài khoản đã đăng lên (TikTok đăng nhập có thể là tài
+khoản khác tên kênh YouTube).
+
+
+=====================================================================
+ CHECKLIST NHANH CHO VIDEO MỚI
+=====================================================================
+[ ] Kịch bản 3 hồi + bảng phân cảnh + tempo + mốc cắt trên beat
+[ ] npm install @napi-rs/canvas ffmpeg-static
+[ ] Giao Opus làm audio.js theo cue sheet (chạy nền)
+[ ] lib.js (math/easing/cam/vật thể/ánh sáng) – copy từ banhmi/ rồi sửa
+[ ] shots.js – mỗi shot 1 hàm, mỗi shot 1 chuyển động máy khác nhau
+[ ] --sheet xem trước, sửa 2–3 vòng
+[ ] Render full (nền) -> ghép audio -> trích frame + volumedetect
+[ ] Bản dọc --vertical -> nén 2-pass < 10 MB
+[ ] Metadata song ngữ -> đăng YouTube Shorts + TikTok công khai
+[ ] Mở link kiểm tra, báo link + các lựa chọn đã tự quyết
+
+TÁI SỬ DỤNG CODE
+----------------
+Mã nguồn mẫu: video hoạt hình/banhmi/
+  lib.js     – helper chung (copy nguyên, đổi palette C và vật thể)
+  shots.js   – 17 shot mẫu: macro, flycam thành phố, lò nướng, dao cắt,
+               top-down, tracking, orbit, chặt dao, rót sốt, whip pan,
+               mưa rau, rack focus, giọt nước slow-mo, pull-back reveal,
+               cắn + vụn nổ + tiêu đề
+  render.js  – --sheet / --stills / --vstill / --vertical / full render
+  audio.js   – tổng hợp nhạc + SFX (sửa mảng cue và tempo)
+Chủ đề món khác (phở, bún chả, cà phê sữa đá…): giữ khung 3 hồi + máy
+quay + hậu kỳ, chỉ thay vật thể, palette, cue âm thanh và metadata.

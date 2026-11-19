@@ -1,0 +1,273 @@
+==================================================================
+  PLAN LÀM VIDEO SHORT "ĐIỆN ẢNH" GIỚI THIỆU MÓN ĂN  (Dish Tales)
+  Dài hơn 1 phút · góc máy điện ảnh · âm thanh sống động · kêu gọi LIKE + FOLLOW
+==================================================================
+
+>>> PHẦN NGƯỜI DÙNG ĐIỀN (chỉ cần sửa 3 dòng này) <<<
+  MÓN ĂN   : ______________________   (vd: Lẩu mắm, Phở bò, Bún bò Huế...)
+  NƠI CHỐN : ______________________   (vd: Cần Thơ, Hà Nội, Huế...)
+  GHI CHÚ  : ______________________   (vd: muốn hài hơn, muốn đăng TikTok...)
+
+------------------------------------------------------------------
+0. HƯỚNG DẪN CHO CLAUDE KHI ĐỌC FILE NÀY
+------------------------------------------------------------------
+- File này là BẢN MÔ TẢ ĐẦY ĐỦ cách làm video. Đọc xong là làm, KHÔNG hỏi lại
+  người dùng. Tự duyệt plan chi tiết, tự sửa lỗi, làm đến khi có file mp4.
+- Nếu có CLAUDE.md trong thư mục dự án thì đọc thêm (quy tắc đăng bài, danh
+  sách video đã làm). Về PHONG CÁCH HÌNH + ÂM THANH thì file này được ưu tiên.
+- Làm thẳng trên ổ D: D:\DishTales-hoathinh\<tên-món-không-dấu>\
+- Phần việc khó (vẽ cảnh, làm âm thanh) giao cho subagent model opus, chạy
+  song song. Claude chính tự xem ảnh preview và sửa.
+- Mẫu tham chiếu (2 video người dùng khen "rất hợp"):
+    Bánh mì : https://www.youtube.com/shorts/I4p8NNlrLiE
+              code: C:\Users\admin\OneDrive\Desktop\thevideo\banhmi\
+    Cà phê  : https://www.youtube.com/shorts/GMl7LT5Qk9w
+              code: C:\Users\admin\OneDrive\Desktop\thevideo\caphe\
+  -> Copy bộ công cụ từ caphe\ (lib.js, people.js, props.js, text.js,
+     render.js, audio.js, world.js) rồi viết thêm đồ ăn và bối cảnh mới.
+
+------------------------------------------------------------------
+1. THÔNG SỐ VIDEO
+------------------------------------------------------------------
+- Khung dọc 1080 x 1920 (9:16, chuẩn YouTube Shorts / TikTok / Reels).
+- 30 fps. Độ dài 66–72 giây (hơn 1 phút). Mặc định 66 s.
+- Vẽ bằng Node + @napi-rs/canvas, xuất khung hình -> ffmpeg (ffmpeg-static).
+- Âm thanh tự tổng hợp bằng Node thuần (audio.js), WAV 48 kHz stereo.
+- File cuối: <tên>-up.mp4 dưới 10 MB, nén 2 pass bằng
+  D:\DishTales-hoathinh\finish.sh <thư-mục> <tên>
+- Tốc độ vẽ < 0,25 s / khung (cache nền ở cấp module, ≤ 300 hạt / khung).
+
+------------------------------------------------------------------
+2. ĐIỀU LÀM NÊN CHẤT "ĐIỆN ẢNH" (QUY TẮC VÀNG)
+------------------------------------------------------------------
+  * Món ăn là ngôi sao. Ánh sáng kể chuyện. Mặt khách Tây là cú chốt cảm xúc.
+
+  NÊN LÀM                                    | KHÔNG LÀM
+  -------------------------------------------+------------------------------------
+  Nền TỐI, ẤM (nâu cà phê / đen); món ăn là  | Nền sáng đều, nhiều màu như hoạt
+  nguồn sáng chính                           | hình thiếu nhi
+  Macro cực cận, tiền cảnh mờ, bokeh tròn    | Cảnh toàn, nhân vật cả người quá nhiều
+  Mỗi cảnh 1 động tác, quay chậm, cắt đúng   | Nhồi nhiều hành động vào 1 cảnh
+  phách nhạc                                 |
+  Nhân vật KHÔNG viền đen, đổ bóng mềm       | Viền đen, mặt tròn bầu kiểu chibi
+  Nhạc phim + foley khớp từng động tác       | Nhạc thể loại vui (disco, chiptune)
+  Có KHOẢNG LẶNG trước miếng ăn đầu tiên     | Nhạc chạy liên tục không nghỉ
+  Hài bằng BIỂU CẢM MẶT                      | Hài bằng tai nạn to (nổ, cháy tóc)
+
+------------------------------------------------------------------
+3. ÁNH SÁNG VÀ MÀU
+------------------------------------------------------------------
+- Nền: gradient tròn, giữa #2a1a0e -> rìa #070403. Không dùng nền phẳng sáng.
+- Đèn chính: ấm 2700K (#ffc27a), chiếu chéo từ trên-trái.
+- Viền sáng (rim light) màu cam ở mép nhân vật và món ăn.
+- Đèn phụ teal rất nhẹ trong vùng tối.
+- Hiệu ứng (lib.js): bokeh (hạt tròn hổ phách 20–90 px, alpha 0,3),
+  steam (hơi nước), dust (bụi bay trong vệt sáng), godRays (tia sáng),
+  flare (lóe ống kính), glow + sparkle (lấp lánh trên dầu, mỡ, nước sốt).
+- Bảng màu: nâu – hổ phách – kem là chủ đạo. Màu của món (đỏ ớt, xanh rau)
+  là điểm nhấn duy nhất có độ bão hòa cao.
+- Hậu kỳ trong render.js (áp cho mọi khung):
+    soft-light đỉnh cam rgba(255,160,80,0.22), đáy teal rgba(20,70,120,0.32),
+    vignette, hạt phim GRAIN = 0.05, chớp sáng trắng ở các điểm nhấn.
+
+------------------------------------------------------------------
+4. THƯ VIỆN GÓC MÁY (mỗi cảnh chọn ĐÚNG 1 chuyển động)
+------------------------------------------------------------------
+  1. PUSH-IN CHẬM   : zoom 1 -> 1.2, ease in-out. Mở cảnh, món hoàn chỉnh.
+  2. MACRO TRƯỢT    : macro cực cận, trượt ngang + tiền cảnh mờ.
+                      Vỏ giòn, mặt nước dùng, hạt gia vị.
+  3. TOP-DOWN       : nhìn thẳng từ trên, xoay nhẹ 2–4 độ. Bày đĩa, rắc rau.
+  4. ORBIT          : xoay quanh vật (elip giả 3D). Món hoàn chỉnh, nồi, phin.
+  5. RACK FOCUS     : tiền cảnh nét -> mờ, hậu cảnh mờ -> nét
+                      (ctx.filter blur trên buffer cache). Chuyển món -> mặt.
+  6. SPEED RAMP     : nhanh -> QUAY CHẬM đúng phách -> nhanh.
+                      Thả nguyên liệu, giọt rơi, dầu bắn.
+  7. CRANE / DRONE  : từ trên trời hạ xuống phố/quán. Dùng mở màn và kết.
+  8. DOLLY ZOOM     : zoom ngược chiều di chuyển (hiệu ứng Vertigo).
+                      Khoảnh khắc "phê" sau miếng đầu.
+  9. WHIP PAN       : lia nhanh + motion blur để chuyển cảnh.
+ 10. SPOTLIGHT DROP : một vật rơi trong vệt đèn tròn giữa nền đen.
+ 11. RUNG MÁY       : shake theo mốc (va chạm, cắn, nổ hạt).
+ Bố cục:
+  - Món ăn chiếm 50–70% khung. Tối đa 2 vật chính trong 1 khung.
+  - Ít nhất 1/3 số cảnh có tiền cảnh mờ (ly, đũa, rau, hơi nước).
+  - Điều máy bằng lib.js: cam(ctx,cx,cy,zoom,rot,fn), ease, lerp, inv,
+    motionBlurX, buffer.
+
+------------------------------------------------------------------
+5. NHÂN VẬT: KHÁCH TÂY "BẢN ĐẸP TRAI" (CHUẨN CỐ ĐỊNH)
+------------------------------------------------------------------
+- LUÔN dùng lại caphe\people.js: face() cận mặt 3/4, eyeMacro() cận mắt,
+  tourist() cả người, thumbsUp(). KHÔNG vẽ khách Tây mới cho từng món.
+- KHÔNG dùng bản cơm tấm (ct_chars.js touristFace): viền đen, mặt tròn bầu,
+  mắt nhỏ, tàn nhang, râu chấm đậm, tóc bát úp, kính đen đặc -> xấu hơn.
+- Đặc điểm phải giữ:
+  + Mặt trái xoan, cằm thon. Không viền đen, đổ bóng mềm:
+    sáng ấm bên trái, bóng đỏ-nâu bên phải.
+    Da: #f7d2b5 / #e3a07e / #c97c5e. Má hồng blur nhẹ, râu lún phún nhẹ.
+  + Mắt hạnh nhân LỚN, tròng xanh gradient #9fd0f2 -> #3f86c4 -> #1b4570,
+    2 đốm sáng, mi trên + lông mi + nếp mí.
+  + Mũi thẳng có vệt sáng.
+  + Tóc vàng dựng nhiều lọn (#f7dc8c / #d9ad55 / #a7782f), có mái, sợi tóc,
+    vệt bóng. Tóc phải bồng và có độ bóng.
+  + KÍNH RÂM CÀI ĐẦU có glassesFn: tròng kính PHẢN CHIẾU MÓN ĂN.
+    -> Đây là chi tiết "chữ ký" của kênh.
+  + Áo thun xanh ngọc #2f8f8a (bóng #1f6764), 2 quai ba lô nâu.
+- Biểu cảm có sẵn:
+    miệng: neutral, smile, woozy, grin, o, sip
+    mắt  : open/openR, lookX/lookY, pupil (giãn đồng tử), spiral (mắt xoáy),
+           happyClosed;  thêm: brow, blush, hairLift, turn, tilt
+- Được THÊM option (không sửa hình gốc): mouth 'chew' (phồng má), 'wow',
+  mồ hôi khi ăn cay, mặt dính sốt nhẹ.
+- Người bán Việt: vẽ CÙNG phong cách (không viền, bóng mềm, tỉ lệ người thật).
+  Chủ yếu chỉ thấy TAY và BÓNG LƯNG để món ăn nổi bật.
+
+------------------------------------------------------------------
+6. KỊCH BẢN 66 GIÂY (khuôn mẫu 21 cảnh)
+------------------------------------------------------------------
+Lưới phách mặc định 120 BPM (1 phách = 0,5 s). Đổi BPM thì giãn mốc theo phách.
+Mọi điểm cắt cảnh rơi ĐÚNG phách nhạc.
+
+HỒI I – MÓC CÂU (0 – 9,5 s)  -> 3 giây đầu phải giữ được người xem
+ C1  0.0–2.5   Macro cực cận chi tiết ngon nhất (vỏ nứt, giọt dầu, nước
+               dùng sôi) trong bóng tối, một vệt sáng quét qua.
+               Máy: push-in + rung theo tiếng nứt. Không chữ.
+ C2  2.5–5.0   Trên cao: phố/chợ/sông lúc bình minh, crane xuống quán.
+               Máy: drone + godRays. Chữ: "<NƠI CHỐN> · 5 GIỜ SÁNG" / EN.
+ C3  5.0–7.0   Cận mặt khách Tây ngửi thấy mùi: mắt to, miệng "o", hơi nước
+               bay qua, tiền cảnh món mờ. Máy: rack focus món -> mặt.
+ C4  7.0–9.5   TÊN MÓN lớn trên nền món hoàn chỉnh xoay chậm.
+               Máy: orbit + flare + chớp sáng. Chữ: tên VI to + tên EN.
+
+HỒI II – CÁCH LÀM (9,5 – 40 s): 8–10 bước, mỗi bước 2,5–3,5 s
+ C5..C14       Mỗi cảnh = 1 bước = 1 động tác = 1 góc máy (mục 4). Không
+               lặp góc máy ở 2 cảnh liền nhau. Khoảng giây 22 chèn 1 cảnh cận
+               mắt khách Tây nhìn trộm, đồng tử giãn.
+               Chữ: "① ... ⑩" song ngữ, đặt cao y≈360.
+               Foley khớp từng động tác (dao, rót, xèo, sủi, giọt rơi).
+
+HỒI III – MIẾNG ĐẦU TIÊN + HÀI (40 – 57 s)
+ C15 40–43     CẢNH CHỮ KÝ: khách Tây chính diện, món ở tiền cảnh mờ, hơi
+               nước, KÍNH RÂM PHẢN CHIẾU MÓN, mắt to miệng "o".
+               Máy: push-in rất chậm, bokeh.
+ C16 43–45     Đưa lên miệng / nếm. NHẠC TẮT, chỉ còn tiếng tim đập + foley.
+               Máy: cận cực, quay chậm.
+ C17 45–47.5   EYE MACRO: đồng tử giãn, mống mắt phản chiếu món -> DOLLY ZOOM.
+               Âm thanh: IMPACT boom đúng khung hình.
+ C18 47.5–52   BÙNG NỔ CẢM XÚC: nhạc vỡ òa, ánh sáng ấm tràn, hạt sáng bay.
+               Biểu cảm theo món (cay -> mặt đỏ, khói tai; đậm -> mắt xoáy "phê").
+               Máy: cẩu máy lên. Chữ: 1 câu thoại ngắn song ngữ.
+ C19 52–57     HÀI NHẸ bằng biểu cảm: say món, lắc lư, xin thêm bát, giơ
+               ngón cái, người bán cười. Máy: cảnh trung, rung nhẹ.
+
+KẾT + KÊU GỌI (57 – 66 s)
+ C20 57–60.5   END CARD: món hoàn chỉnh, crane ra toàn cảnh quán.
+               Khẩu hiệu 3 nhịp, vd "Đậm. Đắng. Phê." /
+               "Bold. Bitter. Unforgettable."
+ C21 60.5–66   LIKE + FOLLOW:
+                 - tim nảy lên ~63,5 s (kèm tiếng "pop")
+                 - nút FOLLOW được bấm ~64,5 s (chớp sáng + tiếng click)
+                 - khách Tây nháy mắt ~65 s
+               Chữ: "Thấy ngon thì LIKE & FOLLOW nhé!" /
+                    "Hungry? LIKE & FOLLOW for more!"
+               + câu hỏi comment, vd "Bạn ăn cay mức mấy?" /
+                 "How spicy do you go?"
+
+Chớp sáng trắng (render.js) đặt ở: tiêu đề, bước đầu Hồi II, miếng đầu tiên,
+bùng nổ cảm xúc, end card, nút FOLLOW.
+
+------------------------------------------------------------------
+7. ÂM THANH: "NHẠC PHIM QUẢNG CÁO" (sống động, cuốn)
+------------------------------------------------------------------
+7.1 Cấu trúc (giữ nguyên ở mọi video):
+ 1. Nhạc phim, không phải nhạc thể loại: pad/dây đàn nền + drone trầm
+    + 1 NHẠC CỤ VIỆT làm giai điệu chính + trống điện ảnh
+    (kick sâu, tom, cymbal ngược, riser).
+ 2. Foley khớp từng động tác ở Hồi II. Nhạc DUCK xuống khi có foley.
+ 3. Mở đầu (C1): tiếng nứt/xèo đầu tiên VANG TO trong im lặng -> nhạc vào.
+ 4. KHOẢNG LẶNG THẬT 0,8–1,5 s trước miếng ăn: chỉ còn tim đập + tiếng môi
+    chạm. Sau đó IMPACT (boom + whoosh) đúng lúc dolly zoom, rồi shepard riser.
+ 5. Vỡ òa: hợp âm lớn, dây đàn bay bổng, nhạc cụ Việt lên cao trào.
+    Đoạn hài: nhạc lệch tông, chậm, wobble ("say món").
+ 6. Kết: về giọng gốc, hợp âm chủ ngân dài. CTA có JINGLE 2–3 nốt riêng,
+    tiếng "pop" khi tim nảy, "click" khi bấm FOLLOW.
+ 7. Master: room + hall reverb, tape wobble nhẹ, chuẩn −15 LUFS,
+    limiter trần −1,3 dBTP, fade cuối, WAV 48 kHz stereo.
+    PRNG có seed riêng cho từng cue (rngFor) -> render lại vẫn y hệt.
+
+7.2 Mỗi video phải KHÁC NHẠC nhau: giữ khung trên, đổi BPM + giọng +
+    nhạc cụ chính + jingle. Đã dùng (không lặp lại):
+    120 BPM đàn bầu + đàn tranh + pad (bánh mì, cà phê), dân ca Bắc 120,
+    lo-fi 80, chiptune 150, bossa-reggae 100, cumbia 96, swing manouche 125,
+    spaghetti western 90, city-pop 112.5.
+    Bảng chọn cho video mới (dùng lần lượt, mỗi mã 1 lần):
+     ĐA-1  92 BPM 4/4, Rê thứ,       ĐÀN NHỊ + cello, taiko + trống chầu
+           -> món đậm, nồi lẩu, bếp lửa
+     ĐA-2  76 BPM 4/4, Mi giáng trưởng, SÁO TRÚC + felt piano, pad ấm,
+           tiếng mưa -> món nước thanh, buổi sáng
+     ĐA-3  128 BPM 4/4, La thứ,      ĐÀN ĐÁ + kèn đồng, ostinato trailer,
+           braam -> món nướng, chiên, lửa lớn
+     ĐA-4  104 BPM 4/4, Son trưởng,  ĐÀN T'RƯNG + marimba, hợp xướng "ah"
+           -> món Tây Nguyên, món ống tre
+     ĐA-5  138 BPM 3/4 valse, Fa trưởng, ĐÀN TRANH + harp, pizzicato,
+           celesta -> món ngọt, chè, bánh
+     ĐA-6  84 BPM 6/8, Si thứ,       KÈN BẦU + guitar nylon, drone, trống cơm
+           -> món miền Trung, cay
+    Dùng mã nào thì ghi lại (vào CLAUDE.md mục nhạc đã dùng).
+
+------------------------------------------------------------------
+8. CHỮ TRÊN VIDEO
+------------------------------------------------------------------
+- Song ngữ qua text.js: tiếng Việt TO màu vàng kem, tiếng Anh NHỎ màu trắng
+  bên dưới, đổ bóng mềm.
+- Vùng an toàn: x 70–930, y < 1560 (tránh nút giao diện Shorts/TikTok).
+- Bước: caption(ctx,T,t0,t1,vi,en,{n,y:360}), t0 = đầu cảnh + 0.15,
+  t1 = cuối cảnh − 0.1.  Thoại: line(...).  Nơi chốn: label(...).
+  Tiêu đề: title(...).  Kết: endCard(...).
+- Ít chữ: mỗi bước ≤ 6 từ tiếng Việt. Không chữ ở cảnh macro mở đầu và
+  cảnh lặng.
+
+------------------------------------------------------------------
+9. QUY TRÌNH LÀM
+------------------------------------------------------------------
+ 1. Viết PLAN-<món>.md trong thư mục video: bảng 21 cảnh theo mục 6 (thời
+    gian, góc máy, nội dung, chữ VI/EN chính xác), chọn mã nhạc mục 7.2,
+    liệt kê mốc foley. Tự duyệt.
+ 2. Tạo thư mục trên D, copy bộ công cụ từ caphe\. Viết đồ ăn + bối cảnh
+    mới (<món>_food.js, <món>_env.js): không viền, gradient, bóng dầu, hơi
+    nước. Xuất ảnh preview đồ ăn để tự kiểm tra.
+ 3. Giao subagent opus song song:
+      - Người 1: C1–C9   (shotsA.js)
+      - Người 2: C10–C16 (shotsB.js)
+      - Người 3: C17–C21 + CTA (shotsC.js)
+      - Người 4: audio.js
+    Brief ghi rõ: chữ ký hàm sN(ctx,lt,p,T), lưới phách, mốc foley, mốc lặng,
+    mốc chớp sáng, vùng an toàn, không sửa file của người khác.
+ 4. Mỗi cảnh xem 2–3 khung: node render.js --sheet <times> <tên>.png.
+    TỰ NHÌN ẢNH và sửa: quá tối không đọc được, vật lơ lửng, tay không chạm
+    đồ, chữ ra ngoài vùng an toàn, mặt khách Tây méo, sai tỉ lệ.
+ 5. Render full -> node audio.js -> finish.sh -> xem lại vài khung file cuối,
+    kiểm tra âm thanh khớp hình.
+ 6. Viết metadata.md: tiêu đề tiếng Anh trước + tiếng Việt (≤ 100 ký tự,
+    có #shorts), mô tả song ngữ có các bước, câu hỏi comment, hashtag, tag.
+ 7. Đăng YouTube (và TikTok nếu người dùng yêu cầu). Cập nhật danh sách
+    video đã làm.
+
+------------------------------------------------------------------
+10. CHECKLIST TRƯỚC KHI ĐĂNG
+------------------------------------------------------------------
+ [ ] Dài 66–72 s, 1080x1920, 30 fps, file < 10 MB
+ [ ] 3 giây đầu là macro cực đẹp + âm thanh mạnh (móc câu)
+ [ ] Món ăn nhìn NGON: bóng dầu, hơi nước, lấp lánh, không phẳng màu
+ [ ] Nền tối ấm, có bokeh, ≥ 5 cảnh có tiền cảnh mờ
+ [ ] Mỗi cảnh 1 góc máy, cắt đúng phách, không lặp góc máy liên tiếp
+ [ ] Khách Tây dùng caphe\people.js, mặt đẹp, có cảnh kính phản chiếu món
+ [ ] Có khoảng lặng trước miếng đầu + IMPACT khớp hình (lệch ≤ 1 khung)
+ [ ] Foley khớp từng động tác
+ [ ] Nhạc khác mọi video trước (BPM, giọng, nhạc cụ, jingle)
+ [ ] Chữ song ngữ, trong vùng an toàn, không che món
+ [ ] Có LIKE + FOLLOW (tim nảy, nút FOLLOW bấm, nháy mắt) + câu hỏi comment
+
+==================================================================
+  HẾT. Người dùng chỉ cần điền MÓN ĂN ở đầu file rồi gửi file này.
+==================================================================
