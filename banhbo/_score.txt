@@ -1,0 +1,793 @@
+// ───────────────────────────── 6. Score: Bánh bò nướng lá dứa (62.308 s, 104 BPM, C major) ─────────────────────────────
+// Sunny tropical folk-pop: marimba + ukulele pluck + glockenspiel + upright bass + shaker / rim / soft kick.
+// banhmi rules: one SFX per on-screen event at its exact second, pan follows motion, music ducked under SFX (master 7a),
+// cut accent on every cut, riser into the tear, absolute silence CUT..RESUME, the bite is the loudest sound.
+const BT = (b) => b * BEAT;
+
+/* ═════════════════════ CUE TABLE (global seconds, PLAN-banh-bo-nuong.md "Key events") ═════════════════════
+ * Every on-screen event lives here and nowhere else. If the animation shifts, edit ONLY these numbers.
+ * Music structure (cuts, chords, drop, silence CUT 46.154 / bite RESUME 46.731) stays on the 104 BPM beat grid. */
+const CUE = {
+  // s1 hook (0–2.308)
+  hookCrack: 0.30, hookStretch: 0.6, hookSag: [1.4, 2.2], whooshS2: 2.0,
+  // s2 pandan (2.308–5.769)
+  leavesLand: 2.55, pestle: [2.88, 3.17, 3.46, 3.75], squeeze: 4.3, drips: [4.6, 4.9, 5.2], bowlFull: 5.5,
+  // s3 batter (5.769–10.385)
+  flour: [6.1, 6.6], milk: [6.9, 7.4], eggs: [7.6, 8.0], sugar: 8.4, juice: 8.7, whisk: [9.0, 10.2],
+  // s4 gag 1 (10.385–13.846)
+  touristIn: 10.6, leafNose: 11.4, sniff: 11.7, leafBite: 12.6, slap: 13.0,
+  // s5 mould (13.846–17.308)
+  brush: [14.0, 14.7], glug: [14.9, 16.4], mouldTap: 16.8,
+  // s6 clay oven (17.308–24.231)
+  lidOn: 17.6, coals: [17.6, 22.0], blubs: [19.0, 19.4, 19.9, 20.3, 20.8, 21.3], timer: 22.0, lidLift: 22.6, steam: [22.6, 23.5], steamFace: 23.3,
+  // s7 unmould + hero (24.231–28.846)
+  flip: 24.5, knock: 24.9, mouldLift: 25.3, cakeThud: 25.5, sparkle: [26.0, 26.4, 26.8],
+  // s8 cut (28.846–32.308)
+  knifeIn: 29.2, slice: [29.4, 30.0], wedgeLift: 30.5, reveal: 31.0,
+  // s9 gag 2 (32.308–36.923)
+  forkPoke: 33.4, boingFork: 33.6, boingKnife: 34.2, jiggle: 34.6, laughVendor: 35.2, rip: 35.9, tearRiser: 35.6,
+  // s10 THE TEAR (36.923–43.846)
+  grab: 37.4, stretch: [38.0, 40.8], stepBack: 40.0, snap: 41.2, splat: 41.5, wobble: [42.0, 43.0],
+  // s11 lift to mouth (43.846–46.154), then silence until the bite (RESUME)
+  lift: 44.0,
+  // s12 bite (RESUME = 46.731) + chews
+  chews: [47.3, 47.6, 47.9, 48.2, 48.5], thumbs: 49.5, laughTourist: 50.5,
+  // s13 farewell (51.923–57.115)
+  walk: [52.5, 55.0], wave: 54.0, waveTing: 54.6, whooshCTA: 56.9,
+  // s14 CTA (57.115–62.308)
+  heart: 57.4, follow: 58.3,
+};
+// shot cuts in beats (shots.js CUTS, without 0 and 108)
+const CUT_BEATS = [4, 10, 18, 24, 30, 42, 50, 56, 64, 76, 81, 90, 99];
+
+// ───────────── helpers ─────────────
+const _memo = new Map();
+const memo = (k, f) => { let v = _memo.get(k); if (!v) { v = f(); _memo.set(k, v); } return v; };
+// exponentially decaying sine partial, added in place (cheap recursive envelope)
+function addPartial(y, f, a, tau, off = 0) {
+  if (f >= SR * 0.45) return y;
+  const w = TAU * f / SR, k = Math.exp(-1 / (tau * SR));
+  let e = a;
+  for (let i = off; i < y.length; i++) { y[i] += e * Math.sin(w * (i - off)); e *= k; if (e < 1e-5) break; }
+  return y;
+}
+
+// ───────────── instruments ─────────────
+/* marimba bar: modal synthesis (1 : 3.93 : 9.2 overtones of a tuned bar), soft rubber mallet */
+function marimbaNote(midi, vel = 1) {
+  return memo('mar' + midi + '|' + vel, () => {
+    const f = m2f(midi), R = rngFor('mar' + midi + '|' + vel);
+    const d1 = clamp(0.6 * Math.pow(262 / f, 0.55), 0.14, 1.5);
+    const y = new Float32Array(secs(Math.min(3.2, d1 * 5)));
+    addPartial(y, f, 1, d1);
+    addPartial(y, f * 3.932, 0.28 * vel, d1 * 0.2);
+    addPartial(y, f * 9.21, 0.08 * vel * vel, d1 * 0.07);
+    for (let i = 0; i < 60; i++) y[i] *= i / 60;
+    addInto(y, norm(burst(R, 0.02, 'lp', 1400 + 2200 * vel, 0.7, 0.0025)), 0, 0.07 * vel);
+    return fadeEdges(norm(y), 0.0005, 0.03);
+  });
+}
+/* glockenspiel: bright steel bar (1 : 2.756 : 5.404 : 8.933) */
+function glockNote(midi, dur = 1.8) {
+  return memo('gl' + midi + '|' + dur, () => {
+    const f = m2f(midi), R = rngFor('gl' + midi);
+    const y = new Float32Array(secs(dur));
+    addPartial(y, f, 1, dur * 0.3);
+    addPartial(y, f * 2.756, 0.2, 0.12);
+    addPartial(y, f * 5.404, 0.07, 0.05);
+    addPartial(y, f * 8.933, 0.025, 0.025);
+    addInto(y, norm(burst(R, 0.006, 'hp', 5000, 0.7, 0.0012)), 0, 0.06);
+    return fadeEdges(norm(y), 0.0004, 0.05);
+  });
+}
+/* ukulele string: Karplus–Strong nylon pluck with a small body (430 Hz / 2.4 kHz) */
+function ukeString(midi, v = 0) {
+  return memo('uke' + midi + '|' + v, () => {
+    const R = rngFor('uke' + midi + '|' + v), f = m2f(midi);
+    const P = Math.max(2, Math.round(SR / f - 0.5)), buf = new Float32Array(P);
+    let lp = 0; for (let i = 0; i < P; i++) { lp += 0.45 * ((R() * 2 - 1) - lp); buf[i] = lp; }
+    let mean = 0; for (let i = 0; i < P; i++) mean += buf[i]; mean /= P; for (let i = 0; i < P; i++) buf[i] -= mean;
+    const decay = Math.exp(-1 / (0.55 * f)), n = secs(1.5), y = new Float32Array(n);
+    let idx = 0;
+    for (let i = 0; i < n; i++) { const a = buf[idx], b = buf[(idx + 1) % P]; y[i] = a; buf[idx] = decay * 0.5 * (a + b); idx = (idx + 1) % P; }
+    let z = filt(y, 'peak', 430, 1.3, 5); z = filt(z, 'peak', 2400, 1.2, 2); z = filt(z, 'hp', 110, 0.7);
+    return fadeEdges(norm(z), 0.0005, 0.2);
+  });
+}
+const ukeMute = (m, v) => memo('ukm' + m + '|' + v, () => {
+  const s = Float32Array.from(ukeString(m, v).subarray(0, secs(0.1)));
+  for (let i = 0; i < s.length; i++) s[i] *= Math.exp(-i / SR / 0.03);
+  return fadeEdges(s, 0, 0.01);
+});
+/* upright bass: plucked, warm harmonics decaying faster upward, finger thump */
+function upright(midi, durS) {
+  return memo('ub' + midi + '|' + durS.toFixed(3), () => {
+    const f = m2f(midi), R = rngFor('ub' + midi), rel = 0.06, n = secs(durS + rel), y = new Float32Array(n);
+    const amps = [1, 0.55, 0.32, 0.2, 0.12, 0.07], E = amps.slice(), K = amps.map((_, h) => Math.exp(-1 / ((1.1 / (1 + 0.7 * h)) * SR)));
+    let ph = 0;
+    for (let i = 0; i < n; i++) {
+      const t = i / SR;
+      ph += f * (1 + 0.01 * Math.exp(-t / 0.025)) / SR; if (ph > 1e6) ph -= 1e6;
+      let s = 0; for (let h = 0; h < 6; h++) { s += E[h] * Math.sin(TAU * (h + 1) * ph); E[h] *= K[h]; }
+      let env = Math.min(1, t / 0.004);
+      if (t > durS) env *= 0.5 + 0.5 * Math.cos(Math.PI * clamp((t - durS) / rel, 0, 1));
+      y[i] = s * env;
+    }
+    addInto(y, norm(burst(R, 0.05, 'lp', 260, 0.8, 0.012)), 0, 0.3);
+    return fadeEdges(norm(filt(y, 'lp', 1400, 0.7)), 0.001, 0.01);
+  });
+}
+function shakerHit(v, acc) {
+  return memo('shk' + v + acc, () => {
+    const R = rngFor('shk' + v + acc), n = secs(0.12), x = noise(n, R), at = 0.012, dc = acc ? 0.04 : 0.024;
+    for (let i = 0; i < n; i++) { const t = i / SR; x[i] *= t < at ? Math.pow(t / at, 2) : Math.exp(-(t - at) / dc); }
+    return fadeEdges(norm(filt(filt(x, 'hp', 4300, 0.7), 'peak', 8500, 1, 5)), 0.0005, 0.01);
+  });
+}
+function rimHit(v) {
+  return memo('rim' + v, () => {
+    const R = rngFor('rim' + v), y = new Float32Array(secs(0.15));
+    addPartial(y, 1720, 0.6, 0.011); addPartial(y, 520, 0.5, 0.022); addPartial(y, 3100, 0.2, 0.006);
+    addInto(y, norm(burst(R, 0.006, 'hp', 3000, 0.7, 0.0012)), 0, 0.5);
+    return fadeEdges(norm(y), 0.0003, 0.02);
+  });
+}
+const KICK_S = norm(filt(kick({ fEnd: 52, fStart: 120, decay: 0.2 }), 'lp', 1500, 0.7));   // soft cajón-like kick
+
+// chords: u = ukulele (G C E A re-entrant strings), r = upright root, t = marimba arpeggio tones
+const CH = {
+  Cmaj7: { u: [67, 60, 64, 71], r: 36, t: [60, 64, 67, 71] },
+  Am7:   { u: [67, 60, 64, 69], r: 45, t: [57, 60, 64, 67] },
+  Fmaj7: { u: [72, 65, 64, 69], r: 41, t: [60, 64, 65, 69] },
+  Fadd9: { u: [67, 60, 65, 69], r: 41, t: [60, 65, 67, 69] },
+  G:     { u: [67, 62, 67, 71], r: 43, t: [59, 62, 67, 71] },
+  G7:    { u: [67, 62, 65, 71], r: 43, t: [59, 62, 65, 67] },
+  Gsus4: { u: [67, 62, 67, 72], r: 43, t: [60, 62, 67, 72] },
+  Dm7:   { u: [69, 62, 65, 72], r: 38, t: [60, 62, 65, 69] },
+  Em7:   { u: [67, 62, 64, 71], r: 40, t: [59, 62, 64, 67] },
+};
+// harmony chart [beat, chord]; act I Cmaj7-Am7-Fmaj7-G, oven Dm7-Em7, hero/tear Fmaj7-G-Em7-Am7, silence at 80
+const CHART = [
+  [0, 'Fadd9'], [2, 'Gsus4'], [3, 'G'],
+  [4, 'Cmaj7'], [8, 'Am7'], [12, 'Fmaj7'], [16, 'G'],
+  [20, 'Cmaj7'], [24, 'Am7'], [26, 'Fmaj7'], [28, 'G'],
+  [30, 'Dm7'], [34, 'Em7'], [38, 'Fmaj7'], [40, 'G7'],
+  [42, 'Cmaj7'], [46, 'Fmaj7'], [50, 'Am7'], [54, 'G'],
+  [56, 'Dm7'], [58, 'G7'], [60, 'Fmaj7'], [62, 'Gsus4'], [63, 'G'],
+  [64, 'Fmaj7'], [68, 'G'], [72, 'Em7'], [74, 'Am7'],
+  [76, 'Fmaj7'], [78, 'Gsus4'], [80, null],
+  [81, 'Cmaj7'], [84, 'Fmaj7'], [86, 'G'], [88, 'Cmaj7'],
+  [90, 'Cmaj7'], [94, 'Am7'], [98, 'Fmaj7'], [100, 'G'], [102, 'Gsus4'], [103, 'G'], [104, 'Cmaj7'], [108, null],
+];
+const chordAt = (b) => { let c = null; for (const [cb, n] of CHART) { if (cb <= b + 1e-9) c = n; else break; } return c; };
+const stepBelow = (m) => m - ({ 0: 1, 5: 1 }[((m % 12) + 12) % 12] ?? 2);   // diatonic approach note
+
+function strum(t, chN, o = {}) {
+  const notes = CH[chN].u, up = o.dir === 'u', g = o.gain ?? 0.06, sp = o.spread ?? 0.012, pan0 = o.pan ?? -0.32;
+  (up ? [3, 2, 1, 0] : [0, 1, 2, 3]).forEach((si, k) => {
+    const m = notes[si], v = (Math.round(t * 13) + si) % 3;
+    put(MUSIC, t + k * sp, o.mute ? ukeMute(m, v) : ukeString(m, v), { gain: g * (up ? 0.7 : 1) * (1 - 0.05 * k), pan: pan0 + (si - 1.5) * 0.09, rev: o.rev ?? 0.2 });
+  });
+}
+/* the band, on a 16th grid. st: kick '13'|'four', ghost, rim, shaker 8|16, bass 'folk'|'stac', uke 'strum'|'soft'|'chop', arps 8|16, level */
+function groove(b0, b1, st) {
+  const L = st.level ?? 1;
+  for (let q16 = Math.round(b0 * 4); q16 < Math.round(b1 * 4); q16++) {
+    const b = q16 / 4, t = BT(b), q = q16 % 16, chN = chordAt(b);
+    if (!chN) continue;
+    const ch = CH[chN];
+    if (st.kick === 'four' ? q % 4 === 0 : st.kick === '13' ? (q === 0 || q === 8) : false) put(MUSIC, t, KICK_S, { gain: 0.42 * L, rev: 0.03 });
+    if (st.kick && st.ghost && q === 10) put(MUSIC, t, KICK_S, { gain: 0.2 * L, rev: 0.03 });
+    if (st.rim && (q === 4 || q === 12)) put(MUSIC, t, rimHit(q16 % 4), { gain: 0.13 * L, pan: -0.12, rev: 0.18 });
+    if (st.shaker && (st.shaker === 16 || q % 2 === 0)) {
+      const acc = q % 4 === 2;
+      put(MUSIC, t, shakerHit(q16 % 5, acc), { gain: (acc ? 0.075 : (q % 2 ? 0.035 : 0.05)) * L, pan: 0.38, rev: 0.06 });
+    }
+    if (st.bass) {
+      const r = ch.r, fifth = r + 7 <= 50 ? r + 7 : r - 5, nx = CH[chordAt(b + 0.5) || chN].r;
+      let ev = null;
+      if (st.bass === 'folk') ev = { 0: [r, 0.75], 6: [fifth, 0.35], 8: [r, 0.75], 12: [fifth, 0.35], 14: [nx !== r ? stepBelow(nx) : r + 12, 0.25] }[q];
+      else ev = { 0: [r, 0.2], 4: [fifth, 0.2], 8: [r + 12, 0.2], 12: [fifth, 0.2] }[q];
+      if (ev) put(MUSIC, t, upright(ev[0], BT(ev[1])), { gain: 0.34 * L * (q === 0 ? 1 : 0.85), pan: 0.02 });
+    }
+    if (st.uke === 'strum') { const d = { 0: 'd', 4: 'd', 6: 'u', 10: 'u', 12: 'd', 14: 'u' }[q]; if (d) strum(t, chN, { dir: d, gain: (q === 0 ? 0.075 : 0.06) * L }); }
+    else if (st.uke === 'soft' && (q === 0 || q === 8)) strum(t, chN, { gain: 0.05 * L, spread: 0.025 });
+    else if (st.uke === 'chop' && (q === 4 || q === 12)) strum(t, chN, { gain: 0.08 * L, mute: true });
+    if (st.arps === 8 && q % 2 === 0) {
+      const idx = [0, 2, 1, 3, 2, 1, 3, 2][q / 2], acc = q === 0 || q === 6 || q === 12;   // 3+3+2 tresillo accents
+      put(MUSIC, t, marimbaNote(ch.t[idx], acc ? 0.9 : 0.6), { gain: (acc ? 0.08 : 0.055) * L, pan: 0.32, rev: 0.25 });
+    }
+    if (st.arps === 16) {
+      const idx = [0, 1, 2, 3, 2, 1, 2, 3, 0, 1, 2, 3, 2, 3, 2, 1][q];
+      put(MUSIC, t, marimbaNote(ch.t[idx] + 12, q % 4 === 0 ? 0.8 : 0.5), { gain: (q % 4 === 0 ? 0.055 : 0.036) * L, pan: q % 2 ? 0.42 : 0.22, rev: 0.25 });
+    }
+  }
+}
+/* melody: marimba lead (rolled on long notes) + optional glockenspiel double */
+function melody(b0, notes, o = {}) {
+  const pan = o.pan ?? -0.12;
+  for (const [b, m, d] of notes) {
+    const t = BT(b0 + b);
+    if (o.mar) {
+      put(MUSIC, t, marimbaNote(m, 1), { gain: o.mar, pan, rev: 0.3 });
+      if (d >= 1.5) for (let k = 1, tt = t + 0.085; tt < t + BT(d) - 0.07; k++, tt += 0.085)
+        put(MUSIC, tt, marimbaNote(m, 0.5), { gain: o.mar * (0.4 - 0.15 * (tt - t) / BT(d)), pan: pan + (k % 2 ? 0.06 : -0.06), rev: 0.3 });
+    }
+    if (o.glock) put(MUSIC, t, glockNote(m + (o.gOct ?? 12)), { gain: o.glock, pan: o.gPan ?? 0.24, rev: 0.4 });
+  }
+}
+const MEL_H = [[0, 76, 1], [1, 79, 0.5], [1.5, 81, 0.5], [2, 79, 1], [3, 76, 0.5], [3.5, 74, 0.5], [4, 72, 1.5], [5.5, 74, 0.5], [6, 76, 2]];   // over Cmaj7 | Am7
+const MEL_A = [[0, 81, 1], [1, 79, 0.5], [1.5, 76, 0.5], [2, 79, 1], [3, 81, 0.5], [3.5, 84, 0.5], [4, 83, 1.5], [5.5, 81, 0.5], [6, 79, 2]];   // over Fmaj7 | G
+const MEL_C = [[0, 84, 1], [1, 81, 0.5], [1.5, 79, 0.5], [2, 76, 2], [4, 74, 1], [5, 79, 1]];                                                    // over Am7 | G
+const MEL_T = [[0, 81, 1], [1, 84, 1], [2, 86, 1.5], [3.5, 84, 0.5], [4, 83, 1], [5, 86, 1], [6, 88, 1.5], [7.5, 86, 0.5], [8, 83, 1], [9, 79, 1], [10, 84, 1], [11, 88, 1]]; // the tear
+
+// ───────────── SFX generators (new for this film) ─────────────
+/* stone pestle into wet pandan leaves */
+function pestleThump(R) {
+  const y = new Float32Array(secs(0.45)); let ph = 0;
+  for (let i = 0; i < y.length; i++) { const t = i / SR; ph += (60 + 80 * Math.exp(-t / 0.012)) / SR; y[i] = Math.sin(TAU * ph) * Math.min(1, t / 0.001) * Math.exp(-t / 0.075); }
+  addPartial(y, 640, 0.28, 0.03); addPartial(y, 1330, 0.16, 0.018); addPartial(y, 2210, 0.08, 0.01);
+  addInto(y, norm(burst(R, 0.008, 'hp', 2500, 0.7, 0.0012)), 0, 0.25);
+  addInto(y, norm(crackle(R, 0.14, (t) => 500 * Math.exp(-t / 0.04), (t) => Math.exp(-t / 0.05), 900, 3500)), secs(0.002), 0.4);
+  addInto(y, norm(burst(R, 0.14, 'lp', 700, 0.9, 0.03)), 0, 0.4);
+  return fadeEdges(norm(y), 0.0005, 0.03);
+}
+/* cloth twisted over a bowl: fabric creak + wet squish + trickle */
+function clothSqueeze(R, dur) {
+  const n = secs(dur), y = new Float32Array(n), sq = norm(squish(R, dur));
+  const imp = new Float32Array(n);
+  for (let t = 0.05; t < dur - 0.05;) { const u = t / dur; imp[secs(t)] = (0.5 + 0.5 * R()) * Math.sin(Math.PI * u); t += (1 / (25 + 30 * u)) * (0.9 + 0.2 * R()); }
+  const cr = norm(filt(filt(imp, 'bp', 750, 5), 'peak', 1600, 3, 6));
+  const tr = norm(filt(noise(n, R), 'bp', (t) => 2200 + 600 * Math.sin(TAU * 7 * t), 2));
+  for (let i = 0; i < n; i++) {
+    const t = i / SR, u = t / dur;
+    y[i] = sq[i] * 0.55 + cr[i] * 0.4 + tr[i] * 0.22 * smooth((u - 0.35) / 0.2) * smooth((1 - u) / 0.15) * (0.6 + 0.4 * Math.sin(TAU * 13 * t));
+  }
+  return fadeEdges(norm(y), 0.01, 0.03);
+}
+/* single drop into green juice (rising plink) */
+function drip(R, f0) {
+  const y = new Float32Array(secs(0.22)); let ph = 0;
+  for (let i = 0; i < y.length; i++) { const t = i / SR; ph += f0 * (1 + 1.2 * (1 - Math.exp(-t / 0.015))) / SR; y[i] = Math.sin(TAU * ph) * Math.min(1, t / 0.0015) * Math.exp(-t / 0.03); }
+  addInto(y, norm(burst(R, 0.03, 'hp', 2800, 0.7, 0.004)), 0, 0.15);
+  addPartial(y, 260, 0.2, 0.012);
+  return fadeEdges(norm(y), 0.0005, 0.02);
+}
+/* sieve tapped over the bowl, powdery hiss */
+function flourSift(R, dur) {
+  const n = secs(dur), y = new Float32Array(n);
+  const hiss = norm(filt(filt(noise(n, R), 'bp', 5200, 0.5), 'hp', 2500, 0.7));
+  const taps = []; for (let t = 0.02; t < dur - 0.05; t += 0.1 + R() * 0.02) taps.push(t);
+  for (let i = 0; i < n; i++) {
+    const t = i / SR; let e = 0.25;
+    for (const tp of taps) if (t >= tp) e += 0.8 * Math.exp(-(t - tp) / 0.045);
+    y[i] = hiss[i] * 0.5 * e * smooth(t / 0.04) * smooth((dur - t) / 0.12);
+  }
+  for (const tp of taps) addInto(y, norm(burst(R, 0.01, 'bp', 1900 + R() * 600, 2.5, 0.003)), secs(tp), 0.3);
+  addInto(y, norm(crackle(R, dur, () => 300, (t) => smooth((dur - t) / 0.15), 4000, 9000)), 0, 0.2);
+  return fadeEdges(norm(y), 0.005, 0.02);
+}
+/* liquid pour into a bowl: stream + bubbles (coconut milk / green juice) */
+function liquidPour(R, dur, o = {}) {
+  const fc = o.fc ?? 1000, rate = o.rate ?? 26, n = secs(dur), y = new Float32Array(n);
+  const st = norm(filt(noise(n, R), 'bp', (t) => fc * (1 + 0.15 * Math.sin(TAU * 5.3 * t) + 0.08 * Math.sin(TAU * 13 * t)), 0.9));
+  const lo = norm(filt(noise(n, R), 'lp', fc * 0.45, 0.8));
+  for (let i = 0; i < n; i++) { const u = i / n; y[i] = (st[i] * 0.3 + lo[i] * 0.25) * smooth(u / 0.06) * smooth((1 - u) / 0.2); }
+  for (let t = 0.03; t < dur - 0.08;) {
+    const f0 = (o.bLo ?? 300) + R() * (o.bSpan ?? 600), len = 0.025 + R() * 0.04, m = secs(len), b = new Float32Array(m); let ph = 0;
+    for (let i = 0; i < m; i++) { const tt = i / SR; ph += f0 * (1 + 0.9 * tt / len) / SR; b[i] = Math.sin(TAU * ph) * Math.min(1, tt / 0.001) * Math.exp(-tt / (len * 0.3)); }
+    addInto(y, fadeEdges(b, 0.0005, 0.004), secs(t), (0.25 + 0.35 * R()) * smooth((dur - t) / 0.2));
+    t += -Math.log(1 - R() * 0.99) / rate;
+  }
+  addInto(y, norm(burst(R, 0.08, 'lp', 1500, 0.8, 0.02)), 0, 0.4);
+  return fadeEdges(norm(y), 0.005, 0.03);
+}
+/* egg: shell knock on the bowl rim, crack, pull apart, egg drops into batter */
+function eggCrack(R) {
+  const y = new Float32Array(secs(0.55));
+  addPartial(y, 2350, 0.35, 0.018); addPartial(y, 1170, 0.3, 0.03);
+  addInto(y, norm(burst(R, 0.006, 'hp', 2200, 0.7, 0.001)), 0, 0.8);
+  addInto(y, norm(crackle(R, 0.07, (t) => 900 * Math.exp(-t / 0.02), () => 1, 1800, 7000)), secs(0.003), 0.7);
+  addInto(y, norm(crackle(R, 0.06, () => 400, () => 1, 2000, 6000)), secs(0.13), 0.35);
+  addInto(y, plop(R, 420, 170, 0.14), secs(0.24), 0.45);
+  return fadeEdges(norm(y), 0.0003, 0.02);
+}
+function sugarPour(R, dur) {
+  const n = secs(dur), y = norm(crackle(R, dur, (t) => 1400 * Math.sin(Math.PI * clamp(t / dur, 0, 1)) + 50, () => 1, 3000, 9000));
+  const hs = norm(filt(noise(n, R), 'bp', 3500, 0.8));
+  for (let i = 0; i < n; i++) y[i] = y[i] * 0.8 + hs[i] * 0.2 * Math.sin(Math.PI * i / n);
+  return fadeEdges(norm(y), 0.005, 0.02);
+}
+/* whisk circles: wire swish + bowl clink once per circle + batter slosh */
+function whisk(R, dur, rate) {
+  const n = secs(dur), y = new Float32Array(n);
+  const wire = norm(filt(noise(n, R), 'bp', (t) => 4200 + 1500 * Math.sin(TAU * rate * t), 1.3));
+  const slosh = norm(filt(noise(n, R), 'lp', (t) => 450 + 250 * Math.sin(TAU * rate * t + 1), 1.5));
+  for (let i = 0; i < n; i++) {
+    const t = i / SR, u = t / dur, sw = 0.35 + 0.65 * Math.pow(Math.abs(Math.sin(Math.PI * rate * t)), 1.5);
+    y[i] = (wire[i] * 0.5 * sw + slosh[i] * 0.45 * (0.6 + 0.4 * Math.sin(TAU * rate * t))) * smooth(u / 0.06) * smooth((1 - u) / 0.1);
+  }
+  for (let k = 0; ; k++) {
+    const t = (k + 0.25) / rate; if (t > dur - 0.1) break;
+    const c = new Float32Array(secs(0.2)); addPartial(c, 2180 + R() * 80, 0.5, 0.05); addPartial(c, 3420, 0.3, 0.035); addPartial(c, 5230, 0.15, 0.02);
+    addInto(y, c, secs(t), 0.22 + 0.1 * R());
+  }
+  return fadeEdges(norm(y), 0.005, 0.03);
+}
+/* tourist bites a raw pandan leaf: fibrous snap + crunchy chomps (stereo) */
+function leafBite(R) {
+  const n = secs(0.65), L = new Float32Array(n), Rr = new Float32Array(n);
+  const [a1, b1] = rustleCrunch(R, 0.4); addInto(L, a1, 0, 0.8); addInto(Rr, b1, 0, 0.8);
+  const [a2, b2] = rustleCrunch(R, 0.3); addInto(L, a2, secs(0.22), 0.5); addInto(Rr, b2, secs(0.22), 0.5);
+  const s = new Float32Array(secs(0.25));
+  addInto(s, norm(burst(R, 0.01, 'hp', 1800, 0.7, 0.0015)), 0, 0.9);
+  addInto(s, norm(burst(R, 0.12, 'bp', 1700, 3, 0.03)), 0, 0.6);
+  addInto(s, norm(burst(R, 0.1, 'lp', 500, 0.8, 0.03)), 0, 0.4);
+  addPan(L, Rr, s, 0, 0.9, 0);
+  return norm2(L, Rr);
+}
+function slap(R) {
+  const y = new Float32Array(secs(0.3));
+  addInto(y, norm(burst(R, 0.07, 'bp', 1300, 0.8, 0.01)), 0, 1);
+  addInto(y, norm(burst(R, 0.01, 'hp', 3000, 0.7, 0.0012)), 0, 0.6);
+  addPartial(y, 190, 0.5, 0.03);
+  addInto(y, norm(burst(R, 0.2, 'lp', 900, 0.7, 0.05)), 0, 0.15);
+  return fadeEdges(norm(y), 0.0003, 0.02);
+}
+/* banana-leaf brush on the metal mould: bristle strokes + faint tin ring */
+function brushMetal(R, dur) {
+  const n = secs(dur), y = new Float32Array(n), strokes = 4, sl = dur / strokes;
+  for (let s = 0; s < strokes; s++) {
+    const t0 = s * sl, m = secs(sl);
+    const br = norm(crackle(R, sl, (t) => 1100 * Math.sin(Math.PI * clamp(t / sl, 0, 1)) + 100, () => 1, 3000, 9500));
+    const sc = norm(filt(noise(m, R), 'bp', s % 2 ? 4200 : 5200, 1.6));
+    for (let i = 0; i < m; i++) { const e = Math.pow(Math.sin(Math.PI * i / m), 0.8); br[i] = br[i] * 0.7 * e + sc[i] * 0.3 * e; }
+    addInto(y, br, secs(t0), 1);
+    const ring = new Float32Array(secs(0.4)); addPartial(ring, 1320, 0.4, 0.15); addPartial(ring, 2870, 0.3, 0.1); addPartial(ring, 4610, 0.2, 0.07);
+    addInto(y, ring, secs(t0 + 0.01), 0.08);
+  }
+  return fadeEdges(norm(y), 0.005, 0.03);
+}
+/* thick batter poured: low glugs + viscous stream + folds */
+function batterGlug(R, dur) {
+  const n = secs(dur), y = new Float32Array(n);
+  const thick = norm(filt(noise(n, R), 'lp', (t) => 380 + 120 * Math.sin(TAU * 2.1 * t), 1.1));
+  for (let i = 0; i < n; i++) { const u = i / n; y[i] = thick[i] * 0.3 * smooth(u / 0.05) * smooth((1 - u) / 0.15); }
+  for (let t = 0.04; t < dur - 0.12;) {
+    const f0 = 120 + R() * 110, len = 0.07 + R() * 0.06, m = secs(len), g = new Float32Array(m); let ph = 0;
+    for (let i = 0; i < m; i++) { const tt = i / SR, u = tt / len; ph += f0 * (1 + 1.4 * u * u) / SR; g[i] = Math.sin(TAU * ph) * Math.min(1, tt / 0.006) * Math.exp(-tt / (len * 0.45)); }
+    addInto(y, fadeEdges(norm(filt(g, 'peak', 480, 1.5, 6)), 0.001, 0.01), secs(t), 0.5 + 0.4 * R());
+    if (R() < 0.35) addInto(y, plop(R, 260, 110, 0.12), secs(t + len * 0.8), 0.25);
+    t += 0.13 + R() * 0.1;
+  }
+  return fadeEdges(norm(y), 0.01, 0.04);
+}
+/* tin mould: tap / knock / landing (pitch, brightness, thud) */
+function tinTap(R, o = {}) {
+  const y = new Float32Array(secs(0.7)), sc = o.pitch ?? 1, br = o.bright ?? 1;
+  addPartial(y, 410 * sc, 0.45, 0.22); addPartial(y, 1090 * sc, 0.4 * br, 0.16); addPartial(y, 2150 * sc, 0.28 * br, 0.1); addPartial(y, 3470 * sc, 0.16 * br, 0.06);
+  let ph = 0; for (let i = 0; i < secs(0.15); i++) { const t = i / SR; ph += (110 + 60 * Math.exp(-t / 0.01)) / SR; y[i] += (o.thud ?? 0.6) * Math.sin(TAU * ph) * Math.exp(-t / 0.035); }
+  addInto(y, norm(burst(R, 0.006, 'hp', 2500, 0.7, 0.001)), 0, 0.4 * br);
+  return fadeEdges(norm(y), 0.0003, 0.05);
+}
+/* clay-oven lid with coals on top: dull clonk + handle ring + coals settling */
+function lidClank(R) {
+  const y = new Float32Array(secs(0.9));
+  addPartial(y, 205, 0.6, 0.1); addPartial(y, 515, 0.45, 0.07); addPartial(y, 1030, 0.25, 0.05); addPartial(y, 1790, 0.15, 0.035);
+  addPartial(y, 2940, 0.12, 0.22);
+  addInto(y, norm(burst(R, 0.05, 'bp', 900, 0.9, 0.01)), 0, 0.6);
+  addInto(y, norm(burst(R, 0.008, 'hp', 2200, 0.7, 0.0015)), 0, 0.5);
+  addInto(y, norm(crackle(R, 0.35, (t) => 220 * Math.exp(-t / 0.12), (t) => Math.exp(-t / 0.15), 1500, 6000)), secs(0.015), 0.45);
+  return fadeEdges(norm(y), 0.0003, 0.05);
+}
+/* thick batter bubble opening (blub), pitched */
+function blub(R, f0) {
+  const y = new Float32Array(secs(0.2)); let ph = 0;
+  for (let i = 0; i < y.length; i++) { const t = i / SR; ph += f0 * (1 + 1.1 * (1 - Math.exp(-t / 0.03))) / SR; y[i] = Math.sin(TAU * ph) * Math.min(1, t / 0.005) * Math.exp(-t / 0.04); }
+  addInto(y, norm(burst(R, 0.01, 'bp', 1600, 1.2, 0.002)), secs(0.055), 0.3);
+  return fadeEdges(norm(filt(y, 'peak', 500, 1.2, 4)), 0.0005, 0.02);
+}
+/* kitchen timer bell on E6 */
+function timerDing(R) {
+  const f = m2f(88), y = new Float32Array(secs(1.8));
+  addPartial(y, f, 1, 0.7); addPartial(y, f * 1.004, 0.5, 0.65);
+  addPartial(y, f * 2.0, 0.35, 0.35); addPartial(y, f * 2.98, 0.22, 0.2); addPartial(y, f * 4.16, 0.14, 0.12); addPartial(y, f * 5.43, 0.08, 0.07);
+  addInto(y, norm(burst(R, 0.005, 'bp', 3000, 2, 0.001)), 0, 0.3);
+  return fadeEdges(norm(y), 0.0003, 0.1);
+}
+/* steam burst: two decorrelated whooshes + hiss (stereo) */
+function steamWhoosh(R, dur) {
+  const L = whoosh(rngFor('stL' + dur), dur, 700, 4200, 2600, 0.25, 0.7), Rr = whoosh(rngFor('stR' + dur), dur, 760, 4600, 2400, 0.28, 0.7);
+  const n = L.length, hL = norm(filt(noise(n, R), 'hp', 5000, 0.7)), hR = norm(filt(noise(n, R), 'hp', 5200, 0.7));
+  for (let i = 0; i < n; i++) { const u = i / n, e = smooth(u / 0.1) * Math.pow(1 - u, 1.2); L[i] = L[i] * 0.8 + hL[i] * 0.25 * e; Rr[i] = Rr[i] * 0.8 + hR[i] * 0.25 * e; }
+  return norm2(L, Rr);
+}
+/* mould lifted off the cake: suction then release pop */
+function suction(R) {
+  const n = secs(0.3), y = norm(filt(noise(n, R), 'bp', (t) => expi(250, 1400, t / 0.22), 3));
+  for (let i = 0; i < n; i++) { const t = i / SR; y[i] *= smooth(t / 0.15) * (t < 0.22 ? 1 : Math.exp(-(t - 0.22) / 0.02)); }
+  const pop = new Float32Array(secs(0.08)); let ph = 0;
+  for (let i = 0; i < pop.length; i++) { const t = i / SR; ph += (700 - 400 * t / 0.08) / SR; pop[i] = Math.sin(TAU * ph) * Math.exp(-t / 0.012); }
+  addInto(y, pop, secs(0.21), 0.8);
+  return fadeEdges(norm(y), 0.005, 0.02);
+}
+/* the cake settles on the leaf plate: soft heavy thud + spongy jiggle */
+function cakeThud(R) {
+  const y = new Float32Array(secs(0.7)); let ph = 0;
+  for (let i = 0; i < y.length; i++) { const t = i / SR; ph += (58 + 45 * Math.exp(-t / 0.02)) / SR; y[i] = Math.sin(TAU * ph) * Math.min(1, t / 0.003) * Math.exp(-t / 0.12); }
+  addInto(y, norm(burst(R, 0.15, 'lp', 450, 0.8, 0.04)), 0, 0.5);
+  const w = new Float32Array(secs(0.6)); let p2 = 0;
+  for (let i = 0; i < w.length; i++) { const t = i / SR; p2 += 150 * (1 + 0.08 * Math.sin(TAU * 9 * t) * Math.exp(-t / 0.2)) / SR; w[i] = Math.sin(TAU * p2) * Math.min(1, t / 0.01) * Math.exp(-t / 0.14) * (0.6 + 0.4 * Math.sin(TAU * 9 * t)); }
+  addInto(y, w, secs(0.02), 0.3);
+  addInto(y, norm(squish(R, 0.3)), secs(0.005), 0.2);
+  return fadeEdges(norm(y), 0.0005, 0.05);
+}
+/* knife sliding through the spongy honeycomb: muffled scrape + squish + air holes popping */
+function knifeSponge(R, dur) {
+  const n = secs(dur), y = new Float32Array(n);
+  const scr = norm(filt(noise(n, R), 'bp', (t) => 1300 + 500 * Math.sin(TAU * 2 / dur * t), 1.1));
+  const sq = norm(squish(R, dur)), pops = norm(crackle(R, dur, () => 70, () => 1, 500, 2200));
+  for (let i = 0; i < n; i++) { const u = i / n, e = smooth(u / 0.08) * smooth((1 - u) / 0.15) * (0.7 + 0.3 * Math.abs(Math.sin(TAU * u))); y[i] = (scr[i] * 0.3 + sq[i] * 0.45 + pops[i] * 0.35) * e; }
+  return fadeEdges(norm(y), 0.005, 0.03);
+}
+/* cartoon spring boing: pitch wobble + jaw-harp wah */
+function boing(R, f0, dur, o = {}) {
+  const rate = o.rate ?? 14, depth = o.depth ?? 0.3, n = secs(dur), y = new Float32Array(n); let ph = 0;
+  for (let i = 0; i < n; i++) {
+    const t = i / SR, vib = depth * Math.exp(-t / (dur * 0.35)) * Math.sin(TAU * rate * t);
+    ph += f0 * (1 + 0.5 * Math.exp(-t / 0.015)) * (1 + vib) / SR; ph -= Math.floor(ph);
+    const s = Math.sin(TAU * ph) + 0.45 * Math.sin(2 * TAU * ph) + 0.3 * Math.sin(3 * TAU * ph) + 0.15 * Math.sin(5 * TAU * ph);
+    y[i] = s * Math.min(1, t / 0.002) * Math.exp(-t / (dur * 0.38));
+  }
+  const w = norm(filt(y, 'bp', (t) => 3 * f0 * (1 + 0.6 * depth * Math.exp(-t / (dur * 0.35)) * Math.sin(TAU * rate * t)), 2.5));
+  norm(y);
+  const out = new Float32Array(n); for (let i = 0; i < n; i++) out[i] = y[i] * 0.6 + w[i] * 0.5;
+  addInto(out, norm(burst(R, 0.006, 'hp', 3000, 0.7, 0.001)), 0, 0.2);
+  return fadeEdges(norm(out), 0.0005, 0.04);
+}
+/* synthesized 'ha-ha' chuckle: breathy 'h' + voiced 'a' through 3 formants */
+function chuckle(R, f0, syl, o = {}) {
+  const sylLen = o.sylLen ?? 0.13, gap = o.gap ?? 0.065, per = sylLen + gap, dur = syl * per + 0.1;
+  const n = secs(dur), src = new Float32Array(n), br = new Float32Array(n); let ph = 0;
+  for (let i = 0; i < n; i++) {
+    const t = i / SR, k = Math.floor(t / per), tl = t - k * per;
+    if (k >= syl) continue;
+    const u = clamp((tl - 0.03) / (sylLen - 0.03), 0, 1);
+    const f = f0 * Math.pow(0.94, k) * (1.06 - 0.1 * u) * (1 + 0.012 * Math.sin(TAU * 6 * t));
+    ph += f / SR; ph -= Math.floor(ph);
+    let s = 0; const H = Math.min(24, Math.floor(3800 / f)); for (let h = 1; h <= H; h++) s += Math.sin(TAU * h * ph) / h;
+    const voiced = tl < 0.03 || tl > sylLen ? 0 : smooth((tl - 0.03) / 0.02) * Math.pow(1 - u, 0.6);
+    src[i] = s * voiced;
+    br[i] = (R() * 2 - 1) * (tl < 0.05 ? Math.sin(Math.PI * tl / 0.05) : 0);
+  }
+  const y = new Float32Array(n), ns = norm(src), nb = norm(br);
+  for (const [f, q, g] of (o.formants ?? [[820, 6, 1], [1250, 7, 0.6], [2750, 8, 0.25]])) { addInto(y, filt(ns, 'bp', f, q), 0, g); addInto(y, filt(nb, 'bp', f, 3), 0, g * 0.35); }
+  return fadeEdges(norm(filt(y, 'hp', 150, 0.7)), 0.005, 0.03);
+}
+/* sniff: two short sniffs then a long blissful inhale */
+function sniff(R) {
+  const n = secs(0.95), y = new Float32Array(n), x = noise(n, R);
+  const a = norm(filt(filt(x, 'bp', (t) => (t < 0.3 ? 2700 : expi(1800, 3400, (t - 0.3) / 0.6)), 1.3), 'hp', 900, 0.7));
+  const seg = (t, a0, l) => (t >= a0 && t < a0 + l ? Math.pow(Math.sin(Math.PI * (t - a0) / l), 0.7) : 0);
+  for (let i = 0; i < n; i++) { const t = i / SR; y[i] = a[i] * (0.8 * seg(t, 0, 0.1) + 0.8 * seg(t, 0.15, 0.1) + seg(t, 0.32, 0.6) * (0.85 + 0.15 * Math.sin(TAU * 7 * t))); }
+  return fadeEdges(norm(y), 0.005, 0.02);
+}
+/* soft cake torn by hand: fibrous crackle + squelch + rising tear */
+function softRip(R, dur) {
+  const n = secs(dur), y = new Float32Array(n);
+  const fib = norm(crackle(R, dur, (t) => 260 * Math.sin(Math.PI * clamp(t / dur, 0, 1)) + 30, () => 1, 600, 2600));
+  const sq = norm(squish(R, dur)), tear = norm(filt(noise(n, R), 'bp', (t) => expi(700, 1600, t / dur), 1.5));
+  for (let i = 0; i < n; i++) { const u = i / n, e = smooth(u / 0.1) * smooth((1 - u) / 0.12); y[i] = (fib[i] * 0.5 + sq[i] * 0.45 + tear[i] * 0.2) * e; }
+  return fadeEdges(norm(y), 0.005, 0.02);
+}
+/* sticky honeycomb strand stretching: rubbery stick-slip squeaks whose pitch rises f0 -> f1 (mono) */
+function stretchSqueak(R, dur, f0, f1, o = {}) {
+  const n = secs(dur), y = new Float32Array(n), segs = o.segs ?? Math.max(1, Math.round(dur / 0.42)), segLen = dur / segs, curve = o.curve ?? 1.2;
+  const fAt = (t) => expi(f0, f1, Math.pow(clamp(t / dur, 0, 1), curve));
+  let ph = 0, j = 0;
+  for (let i = 0; i < n; i++) {
+    const t = i / SR, u = t / dur, s_ = (t % segLen) / segLen;
+    j = 0.999 * j + 0.02 * (R() - 0.5);
+    const f = fAt(t) * (1 + 0.12 * s_) * (1 + 0.15 * j);
+    ph += f / SR; ph -= Math.floor(ph);
+    let s = 0; for (let h = 1; h <= 6; h++) s += Math.sin(TAU * h * ph) / Math.pow(h, 1.3);
+    const segE = smooth(s_ / 0.15) * smooth((1 - s_) / 0.35);
+    const env = (o.legato ? 0.55 + 0.45 * segE : segE) * smooth(u / 0.05) * smooth((1 - u) / 0.08);
+    y[i] = s * (0.75 + 0.25 * Math.sin(TAU * 0.5 * f * t)) * env;
+  }
+  const a = norm(filt(y, 'bp', (t) => 2.2 * fAt(t), 2.5)); norm(y);
+  const out = new Float32Array(n); for (let i = 0; i < n; i++) out[i] = a[i] * 0.8 + y[i] * 0.3;
+  addInto(out, norm(crackle(R, dur, (t) => 25 + 40 * t / dur, () => 1, 700, 2600)), 0, 0.22);   // tacky little pops
+  return fadeEdges(norm(out), 0.01, 0.03);
+}
+function footstep(R) {
+  const y = new Float32Array(secs(0.25)); let ph = 0;
+  for (let i = 0; i < y.length; i++) { const t = i / SR; ph += (80 + 70 * Math.exp(-t / 0.008)) / SR; y[i] = 0.8 * Math.sin(TAU * ph) * Math.min(1, t / 0.002) * Math.exp(-t / 0.03); }
+  addInto(y, norm(burst(R, 0.06, 'lp', 600, 0.8, 0.015)), 0, 0.5);
+  addInto(y, norm(burst(R, 0.05, 'bp', 2400, 0.8, 0.012)), secs(0.025), 0.22);
+  return fadeEdges(norm(y), 0.0005, 0.02);
+}
+/* elastic strand snap: falling 'thwip' */
+function thwip(R) {
+  const n = secs(0.28), y = new Float32Array(n); let ph = 0;
+  for (let i = 0; i < n; i++) { const t = i / SR; ph += expi(2000, 220, t / 0.11) / SR; y[i] = Math.sin(TAU * ph) * Math.min(1, t / 0.001) * Math.exp(-t / 0.06); }
+  const sw = norm(filt(noise(n, R), 'bp', (t) => expi(6000, 700, t / 0.1), 3));
+  for (let i = 0; i < n; i++) { const t = i / SR; y[i] = y[i] * 0.7 + sw[i] * 0.5 * Math.exp(-t / 0.05); }
+  addInto(y, norm(burst(R, 0.006, 'hp', 3000, 0.7, 0.0008)), 0, 0.7);
+  return fadeEdges(norm(y), 0.0003, 0.03);
+}
+/* strand slaps onto the sunglasses: wet splat + lens tick */
+function splat(R) {
+  const y = new Float32Array(secs(0.45));
+  addInto(y, plop(R, 320, 120, 0.2), 0, 0.8);
+  addInto(y, norm(squish(R, 0.3)), secs(0.01), 0.45);
+  addInto(y, norm(crackle(R, 0.15, (t) => 300 * Math.exp(-t / 0.05), () => 1, 700, 2500)), 0, 0.4);
+  const tk = new Float32Array(secs(0.12)); addPartial(tk, 4300, 0.5, 0.012); addPartial(tk, 6900, 0.3, 0.008); addInto(y, tk, 0, 0.18);
+  return fadeEdges(norm(y), 0.0005, 0.03);
+}
+function tink(f, tau) { const y = new Float32Array(secs(tau * 6)); addPartial(y, f, 1, tau); addPartial(y, f * 2.71, 0.4, tau * 0.5); return fadeEdges(norm(y), 0.0003, 0.01); }
+/* soft chew (mouth): low moist squish with tacky clicks */
+function chew(R, dur) {
+  const n = secs(dur), x = noise(n, R);
+  const a = norm(filt(x, 'lp', (t) => 380 + 260 * Math.sin(Math.PI * t / dur), 1.6)), b = norm(filt(x, 'bp', (t) => 900 + 400 * Math.sin(Math.PI * t / dur), 5));
+  const y = new Float32Array(n);
+  for (let i = 0; i < n; i++) { const u = i / n; y[i] = (a[i] * 0.7 + b[i] * 0.45) * Math.pow(Math.sin(Math.PI * u), 1.2); }
+  for (let k = 0; k < 3; k++) addInto(y, norm(burst(R, 0.02, 'bp', 1200 + R() * 1400, 3, 0.004)), secs(0.03 + R() * (dur - 0.08)), 0.18);
+  return fadeEdges(norm(y), 0.005, 0.02);
+}
+/* THE BITE (biteCrunch variant): thin crust gives way softly, honeycomb compresses, chewy sticky pull. Stereo, no hard saturation. */
+function biteSoft(R) {
+  const n = secs(1.0), L = new Float32Array(n), Rr = new Float32Array(n);
+  const cl = (t0, len, rate0, g) => {
+    for (let t = 0; t < len;) {
+      const a = g * Math.exp(-t / (len * 0.45)) * (0.4 + 0.6 * R());
+      addPan(L, Rr, burst(R, 0.016, 'bp', 600 + R() * 3000, 1.1, 0.002 + R() * 0.006), secs(t0 + t), a, (R() - 0.5) * 1.6);
+      t += -Math.log(1 - R() * 0.99) / (rate0 * Math.exp(-t / (len * 0.4)) + 25);
+    }
+  };
+  cl(0, 0.3, 900, 0.55);                                       // 1) thin golden crust: warm, mid-range crackle
+  const pres = norm(filt(noise(secs(0.3), R), 'bp', 2300, 0.6));
+  for (let i = 0; i < pres.length; i++) { const t = i / SR; pres[i] *= Math.min(1, t / 0.002) * Math.exp(-t / 0.05); }
+  addPan(L, Rr, pres, 0, 0.33, 0);
+  const o1 = secs(0.01), sqL = norm(squish(rngFor('biteSqL'), 0.6)), sqR = norm(squish(rngFor('biteSqR'), 0.6));
+  const wL = norm(filt(noise(sqL.length, rngFor('biteWetL')), 'bp', (t) => 1700 + 500 * Math.sin(TAU * 4.3 * t), 1.4)), wR = norm(filt(noise(sqL.length, rngFor('biteWetR')), 'bp', (t) => 1900 + 500 * Math.sin(TAU * 3.7 * t + 1), 1.4));
+  for (let i = 0; i < sqL.length; i++) {                      // 2) spongy squelch: low body + wet mid layer, ~0.3 s of dense energy
+    const t = i / SR, e = Math.min(1, t / 0.008) * Math.exp(-t / 0.2);
+    L[i + o1] += (sqL[i] * 0.6 + wL[i] * 0.35) * e; Rr[i + o1] += (sqR[i] * 0.6 + wR[i] * 0.35) * e;
+  }
+  const wh = norm(filt(noise(secs(0.4), R), 'bp', 1200, 0.7));
+  for (let i = 0; i < wh.length; i++) { const t = i / SR; wh[i] *= Math.min(1, t / 0.004) * Math.exp(-t / 0.09); }
+  addPan(L, Rr, wh, 0, 0.55, 0);                               // 3) airy honeycomb collapse
+  const th = new Float32Array(secs(0.4)); let ph = 0;
+  for (let i = 0; i < th.length; i++) { const t = i / SR; ph += (75 + 50 * Math.exp(-t / 0.025)) / SR; th[i] = Math.sin(TAU * ph) * Math.min(1, t / 0.002) * Math.exp(-t / 0.08); }
+  addPan(L, Rr, fadeEdges(th, 0.001, 0.02), 0, 0.35, 0);      // 4) teeth meet: soft low thump (kept small: peaks without loudness)
+  addPan(L, Rr, stretchSqueak(R, 0.25, 420, 620, { segs: 1 }), secs(0.32), 0.18, 0);   // 5) sticky pull-away
+  cl(0.3, 0.15, 220, 0.35);
+  norm2(L, Rr);
+  for (let i = 0; i < n; i++) { L[i] = Math.tanh(1.2 * L[i]) / Math.tanh(1.2); Rr[i] = Math.tanh(1.2 * Rr[i]) / Math.tanh(1.2); }   // gentle rounding only
+  fadeEdges(L, 0.0005, 0.06); fadeEdges(Rr, 0.0005, 0.06);
+  return norm2(L, Rr);
+}
+// in-key sparkle (C major pentatonic): glassy ting + octave shimmer + glock
+function sparkleTing(t, m, g, p) {
+  put(SFX, t, ting(m2f(m), 0.6), { gain: g, pan: p, rev: 0.45 });
+  put(SFX, t, ting(m2f(m + 12) * 1.003, 0.25), { gain: g * 0.25, pan: -p, rev: 0.45 });
+}
+
+// ═════════════════════ MUSIC ═════════════════════
+// ---- hook (beats 0–4): no drums. Rolled uke chords, glock motif, marimba run into the groove ----
+put2(MUSIC, BT(0), pad([53, 60, 65, 67, 69], BT(2) - 0.05, { attack: 0.6, release: 0.2, cutoff: 900 }), { gain: 0.035, rev: 0.35 });
+put2(MUSIC, BT(2), pad([55, 62, 67, 72], BT(2) - 0.05, { attack: 0.3, release: 0.15, cutoff: 1000 }), { gain: 0.035, rev: 0.35 });
+strum(BT(0) + 0.05, 'Fadd9', { spread: 0.08, gain: 0.05 });
+strum(BT(2), 'Gsus4', { spread: 0.06, gain: 0.05 });
+strum(BT(3), 'G', { spread: 0.05, gain: 0.05 });
+put(MUSIC, BT(0) + 0.05, upright(41, BT(2) - 0.1), { gain: 0.2 });
+put(MUSIC, BT(2), upright(43, BT(2) - 0.05), { gain: 0.22 });
+melody(0, [[0.25, 81, 0.75], [1, 79, 0.5], [1.5, 76, 0.5], [2, 74, 1]], { glock: 0.06, mar: 0.07 });
+[[3, 67], [3.25, 69], [3.5, 72], [3.75, 74]].forEach(([b, m], k) => put(MUSIC, BT(b), marimbaNote(m, 0.8), { gain: 0.06 + 0.012 * k, pan: -0.3 + 0.2 * k, rev: 0.3 }));
+
+// ---- ACT I process (beats 4–30): the groove starts on the first cut ----
+groove(4, 30, { kick: '13', rim: true, shaker: 8, bass: 'folk', uke: 'strum', arps: 8 });
+melody(4, MEL_H, { mar: 0.12, glock: 0.04 });
+melody(12, MEL_A, { mar: 0.12, glock: 0.04 });
+[[20, 91], [22, 88], [24, 93], [26, 91], [28, 86]].forEach(([b, m], k) => put(MUSIC, BT(b), glockNote(m), { gain: 0.045, pan: k % 2 ? -0.3 : 0.3, rev: 0.45 }));
+// ---- oven (beats 30–42): marimba 16ths (time-lapse), glock line rising like the cake ----
+groove(30, 42, { kick: '13', rim: true, shaker: 16, bass: 'folk', uke: 'soft', arps: 16, level: 0.9 });
+[[30, 81], [32, 84], [34, 86], [36, 88], [38, 91], [40, 93]].forEach(([b, m]) => melody(b, [[0, m, 2]], { mar: 0.08, glock: 0.045, gOct: 0 }));
+
+// ---- ACT II hero + cut (beats 42–56): fuller band, melody on glock ----
+put2(MUSIC, BT(42), crash(rngFor('crash42'), 1.6), { gain: 0.09, rev: 0.3 });
+groove(42, 56, { kick: '13', ghost: true, rim: true, shaker: 16, bass: 'folk', uke: 'strum', arps: 8 });
+melody(42, MEL_H, { mar: 0.12, glock: 0.065 });
+melody(50, MEL_C, { mar: 0.11, glock: 0.05 });
+// ---- gag 2 (beats 56–60): bouncy staccato bass, uke chops, leave room for the boings ----
+groove(56, 60, { kick: '13', rim: true, shaker: 8, bass: 'stac', uke: 'chop', level: 0.95 });
+[[56, 74], [56.5, 77], [57, 81], [58, 79], [58.5, 77], [59, 74]].forEach(([b, m]) => put(MUSIC, BT(b), marimbaNote(m, 0.9), { gain: 0.08, pan: -0.15, rev: 0.25 }));
+// ---- the drop (beats 60–64): beat falls away, low filtered bed + low tom; riser 35.6 -> 36.923 (the tear) ----
+put(MUSIC, BT(60), tom(65, 0.45), { gain: 0.2, rev: 0.35 });
+put2(MUSIC, BT(60), pad([53, 57, 60, 64], BT(2) - 0.03, { attack: 0.15, release: 0.1, cutoff: 520 }), { gain: 0.06, rev: 0.4 });
+put2(MUSIC, BT(62), pad([55, 60, 62, 67], BT(2) - 0.02, { attack: 0.3, release: 0.02, cutoff: 700 }), { gain: 0.06, rev: 0.4 });
+put(MUSIC, CUE.tearRiser, riser(rngFor('tearRiser'), BT(64) - CUE.tearRiser, 300, 8000), { gain: 0.2, pan: (t) => 0.3 * Math.sin(TAU * 1.5 * t), rev: 0.3 });
+for (let b = 62; b < 64 - 1e-9; b += 0.25) {          // shaker roll + uke tremolo crescendo into the tear
+  const u = (b - 62) / 2, t = BT(b);
+  put(MUSIC, t, shakerHit(Math.round(b * 4) % 5, true), { gain: 0.03 + 0.06 * u, pan: 0.38, rev: 0.06 });
+  strum(t, chordAt(b), { dir: Math.round(b * 4) % 2 ? 'u' : 'd', gain: 0.02 + 0.04 * u, spread: 0.006 });
+  if (b >= 63) put(MUSIC, t, rimHit(Math.round(b * 4) % 4), { gain: 0.06 + 0.1 * u, pan: Math.round(b * 4) % 2 ? 0.15 : -0.15, rev: 0.2 });
+}
+// ---- THE TEAR (beats 64–76): four-on-the-floor, anthem melody ----
+put2(MUSIC, BT(64), crash(rngFor('crash64'), 2.2), { gain: 0.13, rev: 0.35 });
+put(MUSIC, BT(64), boom(1.0), { gain: 0.18, rev: 0.1 });
+groove(64, 76, { kick: 'four', rim: true, shaker: 16, bass: 'folk', uke: 'strum', arps: 8 });
+melody(64, MEL_T, { mar: 0.13, glock: 0.075 });
+// ---- s11 lift (beats 76–80): drums out, uke tremolo, glock climbs, riser into the hard cut ----
+put(MUSIC, BT(76), upright(41, BT(2) - 0.05), { gain: 0.26 });
+put(MUSIC, BT(78), upright(43, BT(2)), { gain: 0.26 });
+for (let b = 76; b < 80 - 1e-9; b += 0.25) strum(BT(b), chordAt(b), { dir: Math.round(b * 4) % 2 ? 'u' : 'd', gain: 0.025 + 0.012 * (b - 76), spread: 0.006 });
+[[76, 81], [77, 84], [78, 86], [79, 91]].forEach(([b, m]) => put(MUSIC, BT(b), glockNote(m), { gain: 0.06, pan: 0.2, rev: 0.45 }));
+for (let b = 76; b < 80 - 1e-9; b += 0.5) put(MUSIC, BT(b), shakerHit(Math.round(b * 2) % 5, false), { gain: 0.035, pan: 0.38, rev: 0.06 });
+put(MUSIC, BT(78), riser(rngFor('cutRiser'), CUT - BT(78), 250, 6000), { gain: 0.12, rev: 0.25 });
+
+// ---- 46.154–46.731: absolute silence (put() truncation + master gate) ----
+
+// ---- ACT III: the final chord rings after the bite (music thin), then farewell + CTA ----
+{
+  const T0 = RESUME + 0.12;
+  [60, 64, 67, 71, 76].forEach((m, k) => put(MUSIC, T0 + k * 0.05, marimbaNote(m, 0.8), { gain: 0.07, pan: -0.3 + k * 0.15, rev: 0.45 }));
+  strum(T0 + 0.02, 'Cmaj7', { spread: 0.05, gain: 0.045, rev: 0.35 });
+  [[0.3, 88], [0.45, 91], [0.6, 98]].forEach(([d, m], k) => put(MUSIC, T0 + d, glockNote(m, 2.2), { gain: 0.045, pan: 0.3 - 0.3 * k, rev: 0.55 }));
+  put(MUSIC, T0, upright(36, 1.5), { gain: 0.22 });
+}
+groove(84, 90, { bass: 'folk', uke: 'soft', arps: 8, level: 0.65 });
+// farewell (beats 90–99): gentle groove returns, golden hour
+groove(90, 99, { kick: '13', rim: true, shaker: 8, bass: 'folk', uke: 'strum', arps: 8, level: 0.85 });
+melody(90, MEL_H, { mar: 0.1, glock: 0.035 });
+// CTA (beats 99–104) jingle, final hit on 104 (60.0 s), ring to the end
+put2(MUSIC, BT(99), crash(rngFor('crash99'), 1.2), { gain: 0.07, rev: 0.3 });
+groove(99, 104, { kick: '13', ghost: true, rim: true, shaker: 16, bass: 'folk', uke: 'strum', level: 0.95 });
+[[99.5, 76], [100, 79], [100.5, 81], [101, 84], [102, 84], [102.5, 86], [103, 83], [103.5, 86]]
+  .forEach(([b, m]) => { put(MUSIC, BT(b), marimbaNote(m, 1), { gain: 0.12, pan: -0.12, rev: 0.3 }); put(MUSIC, BT(b), glockNote(m + 12), { gain: 0.07, pan: 0.24, rev: 0.4 }); });
+{
+  const T = BT(104);
+  put(MUSIC, T, KICK_S, { gain: 0.45, rev: 0.05 });
+  put2(MUSIC, T, crash(rngFor('crashEnd'), 2.0), { gain: 0.12, rev: 0.35 });
+  put(MUSIC, T, upright(36, 1.8), { gain: 0.3 });
+  strum(T, 'Cmaj7', { spread: 0.03, gain: 0.07, rev: 0.35 });
+  melody(104, [[0, 72, 3]], { mar: 0.1 });
+  [[0, 84], [0.06, 88], [0.12, 91], [0.18, 96]].forEach(([d, m], k) => put(MUSIC, T + d, glockNote(m, 2.2), { gain: 0.06, pan: -0.3 + 0.2 * k, rev: 0.5 }));
+}
+// cut accents on every cut: tiny tick / tom, alternating pan (bigger cuts also get a crash above)
+CUT_BEATS.forEach((b, i) => {
+  const t = BT(b), p = i % 2 ? 0.45 : -0.45;
+  if (b === 81) put(SFX, t, tom(98, 0.2), { gain: 0.06, pan: 0, rev: 0.1 });   // under the bite
+  else if (Math.floor(i / 2) % 2) put(MUSIC, t, tom(i % 4 === 2 ? 123 : 98), { gain: 0.14, pan: p * 0.7, rev: 0.2 });
+  else put(MUSIC, t, tick(rngFor('cutTick' + i)), { gain: 0.07, pan: p, rev: 0.3 });
+});
+
+// ═════════════════════ SFX (one per on-screen event, at CUE times) ═════════════════════
+// s1 hook: crust cracks, hands tear apart (stereo split), strands stretch, long strand sags, whoosh into s2
+{
+  const n = secs(2.3), h = norm(filt(noise(n, rngFor('hookSteam')), 'hp', 3500, 0.7));
+  for (let i = 0; i < n; i++) { const t = i / SR; h[i] *= smooth(t / 0.4) * smooth((2.3 - t) / 0.4) * (0.8 + 0.2 * Math.sin(TAU * 0.7 * t)); }
+  put(SFX, 0, h, { gain: 0.03, pan: (t) => 0.2 * Math.sin(TAU * 0.3 * t), rev: 0.3 });
+}
+put(SFX, CUE.hookCrack, crustCrack(rngFor('hookCrackL')), { gain: 0.68, pan: -0.25, rev: 0.25 });
+put(SFX, CUE.hookCrack + 0.03, crustCrack(rngFor('hookCrackR')), { gain: 0.58, pan: 0.25, rev: 0.25 });
+put(SFX, CUE.hookCrack + 0.02, softRip(rngFor('hookRipL'), 0.5), { gain: 0.4, pan: (t) => -0.15 - t, rev: 0.2 });
+put(SFX, CUE.hookCrack + 0.02, softRip(rngFor('hookRipR'), 0.5), { gain: 0.4, pan: (t) => 0.15 + t, rev: 0.2 });
+put(SFX, CUE.hookStretch, stretchSqueak(rngFor('hookStrL'), 0.8, 300, 520, { segs: 2 }), { gain: 0.27, pan: (t) => -0.15 - 0.5 * t, rev: 0.25 });
+put(SFX, CUE.hookStretch + 0.04, stretchSqueak(rngFor('hookStrR'), 0.76, 306, 530, { segs: 2 }), { gain: 0.25, pan: (t) => 0.15 + 0.5 * t, rev: 0.25 });
+put(SFX, CUE.hookSag[0], stretchSqueak(rngFor('hookSag'), CUE.hookSag[1] - CUE.hookSag[0], 430, 250, { segs: 1, legato: true }), { gain: 0.2, pan: 0, rev: 0.3 });
+put(SFX, CUE.whooshS2, whoosh(rngFor('whS2'), 0.4, 300, 2200, 600, 0.75, 1.0), { gain: 0.35, pan: (t) => -0.6 + 3 * t, rev: 0.2 });
+
+// s2 pandan: leaves land, pestle ×4, cloth squeeze, juice drips (G5 A5 C6), bowl full
+put2(SFX, CUE.leavesLand, leafRustle(rngFor('leaves'), 0.35), { gain: 0.45, rev: 0.15 });
+put(SFX, CUE.leavesLand, plop(rngFor('leavesThud'), 180, 70, 0.18), { gain: 0.3, pan: 0, rev: 0.15 });
+CUE.pestle.forEach((t, k) => put(SFX, t, pestleThump(rngFor('pestle' + k)), { gain: [0.72, 0.68, 0.74, 0.8][k], pan: k % 2 ? 0.1 : -0.1, rev: 0.15 }));
+put(SFX, CUE.squeeze, clothSqueeze(rngFor('cloth'), 0.9), { gain: 0.55, pan: (t) => 0.1 * Math.sin(TAU * 2 * t), rev: 0.15 });
+[79, 81, 84].forEach((m, k) => put(SFX, CUE.drips[k], drip(rngFor('drip' + k), m2f(m)), { gain: 0.35, pan: 0.05, rev: 0.35 }));
+put(SFX, CUE.bowlFull, drip(rngFor('dripFull'), m2f(76)), { gain: 0.3, pan: 0, rev: 0.35 });
+sparkleTing(CUE.bowlFull + 0.02, 88, 0.1, 0.2);
+
+// s3 batter: flour, coconut milk, eggs ×2, sugar, green juice, whisk circles
+put(SFX, CUE.flour[0], flourSift(rngFor('flour'), CUE.flour[1] - CUE.flour[0]), { gain: 0.5, pan: 0, rev: 0.15 });
+put(SFX, CUE.milk[0], liquidPour(rngFor('milk'), CUE.milk[1] - CUE.milk[0], { fc: 1100 }), { gain: 0.55, pan: (t) => 0.35 - 0.5 * t, rev: 0.2 });
+CUE.eggs.forEach((t, k) => put(SFX, t, eggCrack(rngFor('egg' + k)), { gain: 0.65, pan: k ? 0.2 : -0.2, rev: 0.18 }));
+put(SFX, CUE.sugar, sugarPour(rngFor('sugar'), 0.4), { gain: 0.4, pan: 0.1, rev: 0.15 });
+put(SFX, CUE.juice, liquidPour(rngFor('juice'), 0.35, { fc: 1500, bLo: 500, bSpan: 700 }), { gain: 0.45, pan: -0.15, rev: 0.2 });
+put(SFX, CUE.whisk[0], whisk(rngFor('whisk'), CUE.whisk[1] - CUE.whisk[0], 3.3), { gain: 0.55, pan: (t) => 0.4 * Math.sin(TAU * 3.3 * t), rev: 0.15 });
+
+// s4 gag 1: tourist walks in from the right, leaf under nose, sniff, bites the leaf, forehead slap
+[0, 0.3].forEach((d, k) => put(SFX, CUE.touristIn + d, footstep(rngFor('inStep' + k)), { gain: 0.32, pan: 0.6 - 0.25 * k, rev: 0.15 }));
+put2(SFX, CUE.leafNose, leafRustle(rngFor('leafNose'), 0.35), { gain: 0.38, rev: 0.15 });
+put(SFX, CUE.leafNose - 0.05, whoosh(rngFor('leafNoseW'), 0.25, 600, 2500, 900, 0.6), { gain: 0.12, pan: (t) => -0.3 + 2 * t, rev: 0.2 });
+put(SFX, CUE.sniff, sniff(rngFor('sniff')), { gain: 0.45, pan: 0.2, rev: 0.15 });
+put2(SFX, CUE.leafBite, leafBite(rngFor('leafBite')), { gain: 0.68, rev: 0.15 });
+put(SFX, CUE.slap, slap(rngFor('slap')), { gain: 0.72, pan: -0.25, rev: 0.22 });
+
+// s5 mould: brush on metal, thick batter glug, mould tap
+put(SFX, CUE.brush[0], brushMetal(rngFor('brush'), CUE.brush[1] - CUE.brush[0]), { gain: 0.42, pan: (t) => 0.25 * Math.sin(TAU * 2.9 * t), rev: 0.15 });
+put(SFX, CUE.glug[0], batterGlug(rngFor('glug'), CUE.glug[1] - CUE.glug[0]), { gain: 0.62, pan: 0, rev: 0.15 });
+put(SFX, CUE.mouldTap, tinTap(rngFor('mouldTap'), { thud: 0.9 }), { gain: 0.55, pan: 0, rev: 0.2 });
+
+// s6 clay oven: lid clank, coal crackle bed, batter bubbles (G3 A3 C4 D4 E4 G4 rising), timer ding, lid lift + steam, steam in face
+put(SFX, CUE.lidOn, lidClank(rngFor('lidOn')), { gain: 0.78, pan: 0, rev: 0.2 });
+put2(SFX, CUE.coals[0], fireBed(rngFor('coals'), CUE.coals[1] - CUE.coals[0] + 0.3, 24), { gain: 0.17, rev: 0.15 });
+[55, 57, 60, 62, 64, 67].forEach((m, k) => put(SFX, CUE.blubs[k], blub(rngFor('blub' + k), m2f(m)), { gain: 0.42, pan: k % 2 ? 0.25 : -0.25, rev: 0.25 }));
+put(SFX, CUE.timer, timerDing(rngFor('timer')), { gain: 0.32, pan: 0.4, rev: 0.35 });
+put(SFX, CUE.timer + 0.12, timerDing(rngFor('timer2')), { gain: 0.1, pan: 0.4, rev: 0.35 });
+put(SFX, CUE.lidLift, lidClank(rngFor('lidLift')), { gain: 0.3, pan: (t) => -0.1 * t, rev: 0.2 });
+put2(SFX, CUE.steam[0], steamWhoosh(rngFor('steam'), CUE.steam[1] - CUE.steam[0]), { gain: 0.3, rev: 0.25 });
+put(SFX, CUE.steamFace, whoosh(rngFor('steamFace'), 0.45, 1500, 6000, 3000, 0.2, 0.6), { gain: 0.26, pan: 0.3, rev: 0.25 });
+
+// s7 unmould: flip whoosh -> mould lands 24.5, knock-knock, suction lift, cake thud, sparkle tings E6 G6 C7
+put(SFX, CUE.flip - 0.25, whoosh(rngFor('flipW'), 0.28, 300, 1800, 500, 0.85), { gain: 0.35, pan: (t) => 0.4 - 2.5 * t, rev: 0.2 });
+put(SFX, CUE.flip, tinTap(rngFor('flip'), { pitch: 0.8, thud: 1.0, bright: 0.7 }), { gain: 0.55, pan: 0, rev: 0.2 });
+put(SFX, CUE.knock, tinTap(rngFor('knock1'), { pitch: 0.9, bright: 0.45, thud: 0.8 }), { gain: 0.5, pan: 0.1, rev: 0.2 });
+put(SFX, CUE.knock + 0.13, tinTap(rngFor('knock2'), { pitch: 0.9, bright: 0.45, thud: 0.8 }), { gain: 0.35, pan: 0.1, rev: 0.2 });
+put(SFX, CUE.mouldLift, suction(rngFor('lift')), { gain: 0.42, pan: 0, rev: 0.2 });
+put(SFX, CUE.cakeThud, cakeThud(rngFor('cakeThud')), { gain: 0.6, pan: 0, rev: 0.25 });
+[[88, -0.4], [91, 0.4], [96, 0]].forEach(([m, p], k) => sparkleTing(CUE.sparkle[k], m, 0.19, p));
+
+// s8 knife: into the crust, slice through the honeycomb, wedge lifted (sticky), reveal shimmer
+put(SFX, CUE.knifeIn, crustCrack(rngFor('knifeIn')), { gain: 0.6, pan: -0.1, rev: 0.2 });
+put(SFX, CUE.knifeIn, tink(3100, 0.02), { gain: 0.1, pan: -0.1, rev: 0.3 });
+put(SFX, CUE.slice[0], knifeSponge(rngFor('slice'), CUE.slice[1] - CUE.slice[0]), { gain: 0.55, pan: (t) => -0.2 + 0.5 * t, rev: 0.15 });
+put(SFX, CUE.wedgeLift, stretchSqueak(rngFor('wedge'), 0.45, 380, 650, { segs: 1 }), { gain: 0.22, pan: 0.1, rev: 0.2 });
+put(SFX, CUE.wedgeLift, squish(rngFor('wedgeSq'), 0.35), { gain: 0.3, pan: 0.1, rev: 0.15 });
+put(SFX, CUE.reveal, whoosh(rngFor('reveal'), 0.6, 1500, 5000, 3000, 0.4, 0.6), { gain: 0.1, pan: (t) => -0.3 + t, rev: 0.4 });
+[84, 88, 91, 93].forEach((m, k) => put(SFX, CUE.reveal + k * 0.07, glockNote(m), { gain: 0.06, pan: -0.3 + 0.2 * k, rev: 0.45 }));
+
+// s9 gag 2: fork poke + boing (G4), knife boing (E4), cake jiggle (G3), Cô Út laughs, tears a piece
+put(SFX, CUE.forkPoke, tink(3300, 0.02), { gain: 0.25, pan: 0.2, rev: 0.2 });
+put(SFX, CUE.forkPoke, squish(rngFor('forkSq'), 0.15), { gain: 0.18, pan: 0.2, rev: 0.1 });
+put(SFX, CUE.boingFork, boing(rngFor('boingFork'), m2f(67), 0.6, { rate: 16, depth: 0.3 }), { gain: 0.55, pan: (t) => 0.2 + 0.6 * t, rev: 0.2 });
+put(SFX, CUE.boingKnife, boing(rngFor('boingKnife'), m2f(64), 0.75, { rate: 13, depth: 0.32 }), { gain: 0.55, pan: (t) => -0.2 - 0.5 * t, rev: 0.2 });
+put(SFX, CUE.jiggle, boing(rngFor('jiggle'), m2f(55), 1.0, { rate: 7, depth: 0.22 }), { gain: 0.6, pan: 0, rev: 0.22 });
+put(SFX, CUE.jiggle, squish(rngFor('jiggleSq'), 0.6), { gain: 0.2, pan: 0, rev: 0.15 });
+put(SFX, CUE.laughVendor, chuckle(rngFor('laughCoUt'), 245, 4), { gain: 0.3, pan: -0.3, rev: 0.25 });
+put(SFX, CUE.rip, softRip(rngFor('rip'), 0.5), { gain: 0.6, pan: (t) => -0.25 - 0.3 * t, rev: 0.18 });
+
+// s10 the tear: grab, two strands stretch apart with rising squeaks (L/R diverge), step back, snap thwip, splat on glasses, wobble
+put(SFX, CUE.grab, squish(rngFor('grab'), 0.3), { gain: 0.35, pan: 0, rev: 0.15 });
+put(SFX, CUE.grab + 0.05, softRip(rngFor('grabRip'), 0.25), { gain: 0.2, pan: 0, rev: 0.15 });
+{
+  const [a, b] = CUE.stretch, d = b - a;
+  put(SFX, a, stretchSqueak(rngFor('stretchL'), d, 260, 900, { segs: 6 }), { gain: 0.36, pan: (t) => -0.15 - 0.55 * t / d, rev: 0.25 });
+  put(SFX, a + 0.07, stretchSqueak(rngFor('stretchR'), d - 0.07, 263, 912, { segs: 6 }), { gain: 0.32, pan: (t) => 0.15 + 0.55 * t / d, rev: 0.25 });
+  put(SFX, a, softRip(rngFor('stretchFib'), d), { gain: 0.14, pan: 0, rev: 0.2 });
+}
+put(SFX, CUE.stepBack, footstep(rngFor('stepBack')), { gain: 0.4, pan: 0.15, rev: 0.15 });
+put(SFX, CUE.snap, thwip(rngFor('snap')), { gain: 0.75, pan: (t) => clamp(0.5 - 5 * t, -0.1, 0.5), rev: 0.25 });
+put(SFX, CUE.splat, splat(rngFor('splat')), { gain: 0.7, pan: 0, rev: 0.2 });
+put(SFX, CUE.wobble[0], boing(rngFor('wobble'), m2f(52), CUE.wobble[1] - CUE.wobble[0], { rate: 5.5, depth: 0.1 }), { gain: 0.32, pan: (t) => 0.15 * Math.sin(TAU * 2.7 * t), rev: 0.25 });
+
+// s11 lift to mouth
+put(SFX, CUE.lift, whoosh(rngFor('lift'), 0.5, 250, 1400, 400, 0.5), { gain: 0.2, pan: 0, rev: 0.2 });
+
+// s12 THE BITE at RESUME: loudest sound of the film, music silent around it; soft chews; thumbs-up ting; tourist laughs
+put2(SFX, RESUME, biteSoft(rngFor('bite')), { gain: 0.82, rev: 0.2 });
+CUE.chews.forEach((t, k) => put(SFX, t, chew(rngFor('chew' + k), 0.24), { gain: 0.42 - 0.04 * k, pan: k % 2 ? 0.08 : -0.08, rev: 0.12 }));
+sparkleTing(CUE.thumbs, 91, 0.16, 0.25);
+sparkleTing(CUE.thumbs + 0.09, 96, 0.13, 0.35);
+put(SFX, CUE.laughTourist, chuckle(rngFor('laughTourist'), 135, 3, { formants: [[700, 6, 1], [1150, 7, 0.6], [2500, 8, 0.25]] }), { gain: 0.3, pan: 0.15, rev: 0.25 });
+
+// s13 farewell: footsteps walking away to the right + bag rustle per step, Cô Út waves, ting, whoosh into the CTA
+{
+  const [a, b] = CUE.walk;
+  for (let k = 0, t = a; t < b - 0.05; k++, t += 0.5) {
+    const u = (t - a) / (b - a);
+    put(SFX, t, footstep(rngFor('walk' + k)), { gain: 0.3 - 0.13 * u, pan: 0.1 + 0.5 * u, rev: 0.2 + 0.1 * u });
+    put2(SFX, t + 0.04, paperRustle(rngFor('bag' + k), 0.4), { gain: 0.32 - 0.15 * u, rev: 0.2 });
+  }
+}
+put(SFX, CUE.wave, whoosh(rngFor('wave'), 0.3, 1200, 3500, 1500, 0.5), { gain: 0.12, pan: -0.35, rev: 0.25 });
+sparkleTing(CUE.waveTing, 100, 0.14, -0.3);
+put(SFX, CUE.whooshCTA, whoosh(rngFor('whCTA'), 0.35, 400, 2600, 700, 0.61, 1.2), { gain: 0.42, pan: (t) => -0.6 + 3 * t, rev: 0.2 });
+
+// s14 CTA: heart pop, follow press + confetti sparkle (C7 E7 G7)
+put(SFX, CUE.heart, plop(rngFor('heart'), 520, 220, 0.14), { gain: 0.4, pan: -0.25, rev: 0.2 });
+put(SFX, CUE.heart, ting(m2f(96), 0.35), { gain: 0.12, pan: -0.25, rev: 0.4 });
+put(SFX, CUE.follow, tick(rngFor('followTap')), { gain: 0.4, pan: 0.25, rev: 0.15 });
+put(SFX, CUE.follow, plop(rngFor('followPop'), 300, 130, 0.1), { gain: 0.3, pan: 0.25, rev: 0.15 });
+[[0, 96], [0.08, 100], [0.16, 103]].forEach(([d, m], k) => put(SFX, CUE.follow + d, ting(m2f(m), 0.5), { gain: 0.14, pan: -0.2 + 0.3 * k, rev: 0.45 }));
+put2(SFX, CUE.follow + 0.02, crash(rngFor('conf'), 0.8), { gain: 0.05, rev: 0.3 });

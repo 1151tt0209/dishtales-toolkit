@@ -13,6 +13,16 @@ Mẫu mục:
 
 ---
 
+## Bánh bò nướng lá dứa (`banhbo/`, 62 s, 19/11/2026): video đầu tiên làm đúng công thức "bước + 2 gag + cảnh sao"
+- **Cách làm (mất ~1 giờ):** viết `PLAN-banh-bo-nuong.md` trước (bảng 14 cảnh trên lưới 104 BPM, **cột "mốc sự kiện" theo giây dùng chung cho hình và tiếng**), rồi 3 agent Opus chạy song song: A = cảnh quy trình (s2–s6), B = bánh + gag + xé + cắn + CTA (s1, s7–s14, tự viết `bb_cake.js`), C = âm thanh. Chữ viết sẵn trong `overlay.js` từ bảng cảnh. A và B chốt trước điểm nối: s6 kết ở khuôn tại (540,1000) bán kính 300, s7 bắt đầu đúng chỗ đó. Gửi cho B thông tin palette Cô Út (`P.PURPLE`) sau khi A xong, nếu không áo đổi màu giữa các cảnh.
+- **Agent âm thanh (C) làm tốt:** mọi mốc ở một bảng `CUE` đầu `_score.txt` → hình đổi 0.1 s thì sửa một dòng. Cú cắn 46.731 to nhất phim (khoảng lặng tuyệt đối 46.154–46.731) mà **không cần soft-clip**: limiter chỉ ăn 0.7 dB. Tổng thể −18.3 LUFS (nhỏ hơn mức −14 thường gặp cho Shorts, chấp nhận để giữ cú cắn). Chưa ai nghe bằng tai: người dùng nghe thử file trước giờ hẹn.
+- **Lỗi/chỗ chưa đẹp:** (1) hook s1 lần đầu hai cánh tay như hai cây gậy dài → sửa bằng cẳng tay ngắn + khuỷu (`o.upper` trong `C.softHand`); (2) cảnh xé s10 lần đầu dáng đứng dạng chân rộng → cắt khung từ đùi trở lên; (3) tay vẫn như ma-nơ-canh ở cảnh macro; ruột bánh nhìn nghiêng thành vệt thay vì ô tổ ong (nhìn thẳng thì đẹp); (4) cú cắn s12 khi nhìn lại khung 46.8 s chưa thấy miệng cắn rõ, nên làm cận miệng hơn lần sau.
+- **Thumbnail:** khung 1.5 s (hook xé bánh, ruột xanh + sợi + hơi nóng), chữ "KÉO SỢI!" + dải đỏ "PANDAN HONEYCOMB CAKE". Dải đỏ phải thu chữ xuống 44 px cho vừa. Tải bản dọc lúc đăng.
+- **Đăng YouTube:** hẹn giờ (không công khai ngay) để người dùng nghe thử, theo giờ mới trong CLAUDE.md. Tab "Details" của Studio **tự giữ mặc định "Không dành cho trẻ em" và danh mục Howto & Style** từ cài đặt kênh vừa đặt; nhớ chọn playlist "Vietnamese Street Food Animated" ở ô Playlists; giờ hẹn chọn trong danh sách. Gõ mô tả lần đầu bị nuốt (click lúc trang đang tải), dùng `find` ô Description + `scroll_to` + click rồi gõ lại; vẫn báo timeout CDP nhưng gõ xong.
+- **Nhanh hơn nếu:** copy `banhbo/` làm khung (đã có `bb_prep.js`, `bb_cake.js`), tách `sfxlib.js` từ `_score.txt` (SFX mới: chày cối, vắt vải, rây bột, đập trứng, đánh bột, lò than, bong bóng bột, boing lò xo, kéo sợi dính, đứt sợi, nhai), và có thư viện "tay" thật hơn.
+
+---
+
 ## Rà kênh YouTube + dời giờ đăng (19/11/2026)
 - **Chính sách kiếm tiền: không vi phạm.** Không gậy (3 mức tính năng đều Enabled), không khiếu nại bản quyền, mọi video "không dành cho trẻ em". Mốc: 500 sub + 3M view Shorts/90 ngày (hoặc 3.000 giờ) mở hội viên; 1.000 sub + 10M view Shorts (hoặc 4.000 giờ) mở quảng cáo. Kênh đang 174 sub, ~3.8K view/28 ngày.
 - **Rủi ro còn lại:** (1) 20 video học tiếng Anh cũ (2024, Unlisted) + playlist "Full 300 chủ đề tiếng anh" còn Public, lạc chủ đề; (2) loạt Shorts lịch sử Private cùng một khuôn, đừng mở công khai cả loạt một lúc (dễ bị coi là nội dung lặp/sản xuất hàng loạt); (3) chưa chọn quốc gia cư trú; từ khóa kênh trống; danh mục tải lên mặc định "None"; mô tả kênh còn nhắc pizza/tacos.

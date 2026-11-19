@@ -42,4 +42,5 @@ Node + @napi-rs/canvas (1080x1920, 30 fps) + ffmpeg-static. Hình và âm thanh 
 | `SKILL-lam-video-hoat-hinh.txt` | Quy trình 9 bước từ kịch bản đến đăng |
 | `PLAN-VIDEO-DIEN-ANH.txt` | Mẫu video điện ảnh 66 giây |
 | `PLAN-*.md` | Kịch bản từng món |
+| `banhbo/` | Bánh bò nướng 62s: mẫu video có bước + 2 gag, `PLAN-banh-bo-nuong.md` |
 | `banhxeo40/_v2wip/` | Bản bánh xèo ~58s đang dừng (các bước ①–⑨ + gag), có README |

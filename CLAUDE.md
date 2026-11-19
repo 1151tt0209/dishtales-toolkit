@@ -19,6 +19,7 @@
     - `text.js` (chữ song ngữ, tựa đề, end card), `shotsA.js` + `shotsB.js` (17 cảnh), `shots.js` (mốc thời gian), `render.js`, `audio.js`.
 - Lệnh: `node render.js --sheet all` (xem trước 1 khung mỗi cảnh) · `node render.js --sheet 1.5,7.2 ten.png` · `node render.js` (render đủ + ghép `audio.wav`) · `node audio.js`.
 - Luôn xem ảnh xem trước, sửa lỗi rồi mới render đủ.
+- `banhbo/`: **bánh bò nướng lá dứa, 62 s, mẫu mới nhất cho video có bước + gag** (19/11/2026). Có `PLAN-banh-bo-nuong.md` (bảng cảnh + mốc sự kiện theo giây dùng chung cho hình và tiếng), `shotsA.js` + `bb_prep.js` (quy trình: cối giã, vắt nước, trộn bột, khuôn, lò than có mặt cắt), `shotsB.js` + `bb_cake.js` (bánh vàng nâu, ruột tổ ong, sợi dính kéo dãn/đứt, miếng cắn, tay mềm), `_score.txt` + `_build_audio.js` (âm thanh kiểu banhmi, mọi mốc ở một bảng `CUE` đầu file), `thumb.js` (thumbnail "KÉO SỢI!"). Cô Út dùng `NP.coUt(..., {palette: P.PURPLE})`.
 - `banhxeo40/`: bánh xèo bản **40s quảng cáo điện ảnh** (không hài), làm theo prompt 6 cảnh của người dùng (19/11/2026), dùng lại props của `banhxeo/`. Hai điểm mới đáng dùng lại:
   - **`overlay.js`**: toàn bộ chữ vẽ ở một chỗ, sau khi chỉnh màu (shot không tự vẽ chữ). Đổi chữ/thời gian không cần đụng code shot. `render.js --notext` để xem hình không chữ.
   - Shot nhận **"T ảo"** (`shots.js` của `_v2wip/`): kéo dài video, chèn shot mới mà không phải sửa shot cũ.
@@ -103,6 +104,7 @@
 | Cá lóc nướng trui (70s, Mekong spaghetti western 90 BPM) | `D:\DishTales-hoathinh\caloc\` | https://youtube.com/shorts/EZm9oJLY3Bc (hẹn 23:00 26/11) | hẹn 23:00 26/11 trên TikTok Studio (link có sau khi đăng) |
 | Cơm tấm Sài Gòn (68s, Saigon city-pop/disco-funk 112.5 BPM) | `D:\DishTales-hoathinh\comtam\` | https://youtube.com/shorts/l-HAUfiq6Eo (công khai ngay 19/11, người dùng dặn "up và public ngay") | chưa đăng (lần này người dùng chỉ yêu cầu YouTube) |
 | Bánh xèo miền Tây bản 40s điện ảnh (ethereal folk 72 BPM, đàn tranh + sáo + đàn bầu) | `banhxeo40/` (máy làm: `C:\Users\Admin\OneDrive\Desktop\hh3d\banhxeo40\`) | https://youtube.com/shorts/6FqwrYZXUS8 (công khai ngay 19/11, người dùng dặn "up public") | chưa đăng |
+| Bánh bò nướng lá dứa (62 s, sunny tropical folk-pop 104 BPM: marimba + ukulele + glockenspiel + contrabass, C major; 6 bước + 2 gag + cảnh xé kéo sợi) | `banhbo/` (máy làm: `C:\Users\Admin\OneDrive\Desktop\hh3d\banhbo\`) | https://youtube.com/shorts/Ub2jbvCDxMo (hẹn 11:00 20/11/2026 giờ VN; người dùng nghe thử trước) | chưa đăng (người dùng chỉ nói "up", mới đăng YouTube) |
 
 ## Giờ đăng (người dùng chốt 19/11/2026, thay cho quy tắc 23:00 bên dưới)
 - Khung giờ VN được người dùng thấy nhiều view: **11:00, 13:15, 15:00, 17:00, 18:00**. Khán giả kênh: Việt Nam 45%, Mỹ 29% (Studio chưa đủ dữ liệu "khi nào người xem online", xem lại sau vài tuần).
