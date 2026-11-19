@@ -13,6 +13,12 @@ Mẫu mục:
 
 ---
 
+## Demo 15s bánh xèo, do **Sonnet làm một mình** (`demo15/`, 19/11/2026): thử xem Sonnet có làm được không
+- **Kết quả (Claude tự đánh giá, chờ người dùng xem):** làm được trọn vẹn từ code đến MP4 15s (7 shot, chữ song ngữ, âm thanh kiểu Bánh mì) trong một phiên, không dùng subagent Opus. Chất lượng bằng bản 40s ở các cảnh dùng lại props (đổ bột, gấp bánh, đĩa hero, CTA); vẫn có điểm yếu cũ: tay/mặt cartoon, cuộn lá hơi giống ống.
+- **Cách làm nhanh:** copy `banhxeo40/` (props + `overlay.js`), viết 1 file `shots.js` gọn cho cả video thay vì A/B/C; âm thanh = `_build_audio.js` ghép **engine + master của `banhmi/audio.js`** (dòng 1–749 và 938–1075) với một `_score.txt` mới → chỉ phải viết phần score (cue theo giây trên hình), ~1 giây render. Cách này nên dùng cho mọi video: không viết lại engine.
+- **Lỗi đã gặp:** `L.cam(ctx,cx,cy,…)` đặt (cx,cy) vào giữa màn hình, nên cy ≠ 960 dịch khung lên và lộ **dải đen ở đáy**. Dùng helper `cam()` kẹp tâm camera trong ảnh (xem đầu `demo15/shots.js`). Cuộn lá `leafWrap` scale 2.0 to như ống tre → dùng ~1.45. Tiêu đề đè lên dòng bột đổ → đặt tiêu đề y≈290.
+- **Nhịp:** 108 BPM (chưa dùng), 27 beat = đúng 15.0 s; khoảng lặng 10.0–10.45 s rồi cú cắn 10.45 s.
+
 ## Quy tắc độ dài (người dùng chốt 19/11/2026)
 - **50–70 s, tự phân phối theo món/cảnh.** Gợi ý của Claude: 35–50 s là điểm ngọt cho Shorts món ăn (xem hết nhiều, dễ được xem lại); trên 60 s dễ rớt người xem giữa chừng → gom các bước nhẹ vào một cảnh, giữ 2 gag mạnh nhất. Khi có số liệu giữ chân (YouTube Studio → % xem trung bình) thì ghi vào đây và chỉnh lại khoảng này.
 
