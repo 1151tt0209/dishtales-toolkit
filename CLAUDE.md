@@ -104,8 +104,13 @@
 | Cơm tấm Sài Gòn (68s, Saigon city-pop/disco-funk 112.5 BPM) | `D:\DishTales-hoathinh\comtam\` | https://youtube.com/shorts/l-HAUfiq6Eo (công khai ngay 19/11, người dùng dặn "up và public ngay") | chưa đăng (lần này người dùng chỉ yêu cầu YouTube) |
 | Bánh xèo miền Tây bản 40s điện ảnh (ethereal folk 72 BPM, đàn tranh + sáo + đàn bầu) | `banhxeo40/` (máy làm: `C:\Users\Admin\OneDrive\Desktop\hh3d\banhxeo40\`) | https://youtube.com/shorts/6FqwrYZXUS8 (công khai ngay 19/11, người dùng dặn "up public") | chưa đăng |
 
+## Giờ đăng (người dùng chốt 19/11/2026, thay cho quy tắc 23:00 bên dưới)
+- Khung giờ VN được người dùng thấy nhiều view: **11:00, 13:15, 15:00, 17:00, 18:00**. Khán giả kênh: Việt Nam 45%, Mỹ 29% (Studio chưa đủ dữ liệu "khi nào người xem online", xem lại sau vài tuần).
+- Bảy Shorts đang hẹn đã dời (múi giờ Local GMT+07:00): 20/11 18:00 bột chiên, 21/11 11:00 mì xào giòn, 22/11 13:15 phở, 23/11 17:00 nem nướng, 24/11 15:00 hủ tiếu, 25/11 18:00 bánh xèo 70s, 26/11 11:00 cá lóc. Mỗi ngày một video, xoay vòng các khung giờ để so sánh view giữa các khung rồi giữ khung tốt nhất.
+- Cách đổi giờ trong Studio: `studio.youtube.com/video/<id>/edit` → nút "Edit video visibility status" → ô giờ → **chọn trong danh sách** (gõ đè AM/PM đôi khi không ăn, Done vẫn xám) → Done → Save. Kiểm lại bằng cách đọc giá trị `input` trong shadow DOM.
+
 ## Ghi chú đăng bài (18/11/2026)
-- Giờ hẹn chuẩn cho video 90s: **23:00 giờ VN** (= 11:00 sáng miền Đông Mỹ, 16:00 giờ Anh; né 02:00/07:00/21:00 của loạt Shorts kia và 6:30/9:30/12:00 trên TikTok). Bánh tráng trộn: không kịp đăng 23:00 ngày 18/11. Người dùng chọn làm kỹ rồi hẹn sau, vào giờ đẹp gần nhất không trùng lịch (dự kiến 19:00 ngày 19/11, trước bún chả 23:00). Các video sau vẫn theo quy tắc cũ: mỗi ngày một video lúc 23:00, nối tiếp ngày cuối đã hẹn (phở 22/11). Vậy nem nướng 23/11, rồi hàng chờ từ 24/11.
+- (Đã thay bằng mục "Giờ đăng" ở trên.) Giờ hẹn chuẩn cho video 90s: **23:00 giờ VN** (= 11:00 sáng miền Đông Mỹ, 16:00 giờ Anh; né 02:00/07:00/21:00 của loạt Shorts kia và 6:30/9:30/12:00 trên TikTok). Bánh tráng trộn: không kịp đăng 23:00 ngày 18/11. Người dùng chọn làm kỹ rồi hẹn sau, vào giờ đẹp gần nhất không trùng lịch (dự kiến 19:00 ngày 19/11, trước bún chả 23:00). Các video sau vẫn theo quy tắc cũ: mỗi ngày một video lúc 23:00, nối tiếp ngày cuối đã hẹn (phở 22/11). Vậy nem nướng 23/11, rồi hàng chờ từ 24/11.
 
 ## Đợt làm đêm 18→19/11/2026
 - Làm liên tục đến **6h sáng 19/11**. Hết quota thì dừng, đợi phục hồi rồi làm tiếp.

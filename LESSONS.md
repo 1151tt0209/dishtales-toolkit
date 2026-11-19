@@ -13,6 +13,14 @@ Mẫu mục:
 
 ---
 
+## Rà kênh YouTube + dời giờ đăng (19/11/2026)
+- **Chính sách kiếm tiền: không vi phạm.** Không gậy (3 mức tính năng đều Enabled), không khiếu nại bản quyền, mọi video "không dành cho trẻ em". Mốc: 500 sub + 3M view Shorts/90 ngày (hoặc 3.000 giờ) mở hội viên; 1.000 sub + 10M view Shorts (hoặc 4.000 giờ) mở quảng cáo. Kênh đang 174 sub, ~3.8K view/28 ngày.
+- **Rủi ro còn lại:** (1) 20 video học tiếng Anh cũ (2024, Unlisted) + playlist "Full 300 chủ đề tiếng anh" còn Public, lạc chủ đề; (2) loạt Shorts lịch sử Private cùng một khuôn, đừng mở công khai cả loạt một lúc (dễ bị coi là nội dung lặp/sản xuất hàng loạt); (3) chưa chọn quốc gia cư trú; từ khóa kênh trống; danh mục tải lên mặc định "None"; mô tả kênh còn nhắc pizza/tacos.
+- **Giờ đăng:** xem mục "Giờ đăng" trong CLAUDE.md. Bài học thao tác: ô giờ lịch hẹn phải chọn trong danh sách, và bố cục hộp thoại đổi theo chiều cao khung (730 → 674 px) nên chụp lại ảnh trước khi bấm theo tọa độ.
+- **Chưa làm, chờ người dùng đồng ý rõ:** chuyển 20 video cũ + playlist sang Private (hệ thống chặn khi chưa có chữ "đồng ý"), từ khóa/danh mục/ngôn ngữ mặc định, viết lại mô tả kênh.
+
+---
+
 ## Thumbnail bánh xèo 40s (19/11/2026): quy tắc "mỗi video một ảnh ấn tượng nhất"
 - Khung chọn: **23.75 s** (bánh vừa nứt, tôm đỏ + thịt lộ ra, hơi nóng, vụn giòn). Khung 24.2 s (macro quá gần) làm phần nhân thành mảng trừu tượng nên bỏ. Khi chọn: rút contact sheet 6 khung quanh khoảnh khắc "đã nhất" rồi mới chọn.
 - Chữ "GIÒN RỤM!" ban đầu 215 px tràn khỏi khung 1080 → `outlined()` giờ tự thu nhỏ theo `maxW`. Luôn Read ảnh sau khi tạo.
