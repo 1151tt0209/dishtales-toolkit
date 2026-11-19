@@ -24,6 +24,14 @@
   - Shot nhận **"T ảo"** (`shots.js` của `_v2wip/`): kéo dài video, chèn shot mới mà không phải sửa shot cũ.
   - `_v2wip/`: bản ~58s đang dừng (thêm các bước ①–⑨ + 4 cảnh hài khách Tây – Má Tư chỉ cách ăn), xem README trong đó. `BRIEF-shots.md` nhắc `_old70/` = thư mục `banhxeo/`.
 
+## Sau mỗi video: 4 việc (người dùng dặn 19/11/2026, để video sau nhanh và xịn hơn)
+1. **Ghi bài học** vào `LESSONS.md` (mục mới trên cùng: khen/chê, lỗi + cách sửa, chỗ chưa đẹp, cách làm nhanh hơn). **Đầu mỗi video mới: đọc `LESSONS.md` + `AUDIO-SYNC-GUIDE.md` trước.**
+2. **Cập nhật `CLAUDE.md`**: bảng "Video đã làm", nhạc đã dùng (BPM/nhạc cụ), thư viện nhân vật nếu có nhân vật/pose mới.
+3. **Nếu viết được thứ dùng lại** (hàm SFX, helper camera, kiểu chữ): gom vào file chung thay vì copy-paste, ghi vào `LESSONS.md`.
+4. **Commit + push** (`git add -A && git commit && git push`) để repo luôn mới nhất. Không đẩy mp4/wav/ảnh preview.
+
+**Ưu tiên cao nhất: âm thanh theo kiểu `banhmi/audio.js`** (người dùng rất thích, 19/11/2026). Mỗi video mới: lập cue sheet từng giây theo sự kiện trên hình, mỗi hành động một tiếng riêng, pan theo chuyển động, duck nhạc dưới SFX, im lặng trước cú cắn, và để người dùng nghe thử trước khi đăng.
+
 ## Phong cách người dùng thích
 - **Độ dài: 1:00–1:40, tự cân đối** (người dùng dặn 19/11/2026, nới quy tắc "1:20–1:40"). Từ hủ tiếu trở đi làm khoảng **66–72 giây** (~20–22 cảnh, 4 hồi, CTA ~5 giây cuối) cho nhanh; nem nướng giữ 90 giây vì đã dựng xong khung. Cấu trúc tham khảo `PLAN-CHUNG-90s.md` (rút gọn các hồi). Video cũ 30s/45s/60s chỉ là mẫu code.
 - **Cuối mọi video có đoạn kêu gọi LIKE + FOLLOW** (84.5–90s: nút tim + nút FOLLOW được bấm, chữ song ngữ "Thấy ngon thì LIKE & FOLLOW nhé!" / "Hungry? LIKE & FOLLOW for more!" + câu hỏi comment).
