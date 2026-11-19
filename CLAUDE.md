@@ -72,6 +72,7 @@
 - Làm xong video mới: `git add -A && git commit -m "<tên video>" && git push` trong `D:DishTales-hoathinh` để repo luôn mới nhất.
 
 ## Đăng bài
+- **Thumbnail (người dùng dặn 19/11/2026): mỗi video đăng YouTube phải có thumbnail cuốn hút, chọn 1 ảnh ấn tượng nhất.** Làm bằng `banhxeo40/thumb.js`: `node render.js --stills <giây> --notext` lấy khung đẹp nhất (món ăn rõ, có hơi nóng/nhân lộ ra, ví dụ khoảnh khắc bẻ bánh), rồi `node thumb.js previews\still_<giây>.png thumbnail` → `thumbnail_vertical.png` (1080×1920, dùng cho Shorts) + `thumbnail_wide.png` (1280×720). Chữ to có viền (tiêu đề ngắn 2–3 từ như "GIÒN RỤM!" + tên món + dải đỏ tiếng Anh), tia sáng lấp lánh quanh món, chữ vừa khung (hàm `outlined` tự thu nhỏ). **Xem ảnh trước khi up** (lần đầu chữ tràn mép, ảnh phóng quá to thành mảng trừu tượng → zoom ≤1.15). Tải lên: trang `studio.youtube.com/video/<id>/edit` → `find` ô "(file input)" ở mục Thumbnail → `file_upload` → Save (hiện "Changes saved"). Ảnh < 2 MB.
 - Kênh đã có loạt Shorts khác hẹn mỗi ngày (từ 20/11) và TikTok có bài lúc 6:30/9:30/12:00 hằng ngày → video mới hẹn giờ né các mốc đó, cách video trước 2–3 tiếng, giờ đẹp (11:30, 19:00, 21:00...).
 - YouTube: kênh "Dish Tales" @DishTalesShorts (Studio channel id UCqg4Ipce2Li0nn43_1eXwHg). TikTok: @hoainiemxuacu12 ("Những Ngày Xưa Cũ"), đăng qua tiktok.com/tiktokstudio/upload.
 - Dùng **Claude in Chrome** (Chrome của người dùng, đã đăng nhập sẵn), không dùng browser pane.

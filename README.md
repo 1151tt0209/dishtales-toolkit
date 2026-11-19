@@ -13,7 +13,7 @@ Node + @napi-rs/canvas (1080x1920, 30 fps) + ffmpeg-static. Hình và âm thanh 
 3. **Làm video** theo kịch bản người dùng đưa, copy bộ công cụ từ video gần nhất rồi sửa.
 4. **Sau mỗi video, cập nhật tài liệu này** (xem "4 việc sau mỗi video" trong `CLAUDE.md`), rồi commit + push. Tài liệu phải tốt lên sau mỗi video: đó là yêu cầu của người dùng.
 
-## 10 điều quan trọng nhất (tóm tắt, chi tiết trong `CLAUDE.md`)
+## 11 điều quan trọng nhất (tóm tắt, chi tiết trong `CLAUDE.md`)
 
 1. **Âm thanh là ưu tiên số 1, làm theo kiểu `banhmi/audio.js`**: mỗi hành động một tiếng riêng đúng giây trên hình, pan theo chuyển động, nhạc tự hạ khi có SFX, im lặng trước cú cắn. Subagent không nghe được → người dùng nghe thử trước khi đăng.
 2. **Mọi chữ trên video song ngữ** (Việt to vàng kem, Anh nhỏ trắng), trong vùng an toàn x 70–930, y < 1560. Chữ vẽ ở `overlay.js` (xem `banhxeo40/`), không vẽ trong shot.
@@ -24,8 +24,9 @@ Node + @napi-rs/canvas (1080x1920, 30 fps) + ffmpeg-static. Hình và âm thanh 
 6. **Dùng lại nhân vật có sẵn**, đổi màu qua tùy chọn `o`, đừng viết lại hàm. Khách Tây tóc vàng xuyên suốt, luôn dùng bản `caphe/people.js`.
 7. **Xem ảnh xem trước (`--sheet`) và sửa 2–3 vòng trước khi render đủ.** Cảnh cận tay/mặt kiểu cartoon, lá cuốn, tôm thịt là chỗ hay kém đẹp.
 8. **Chia việc cho subagent theo độ khó**: vẽ, nhạc, debug → `opus`; việc nhẹ → `sonnet`, luôn kiểm tra lại. Hai agent vẽ chung video phải chốt trước vị trí match cut.
-9. **Đăng bài bằng Claude in Chrome** (Chrome của người dùng), tiêu đề/mô tả song ngữ, **tiếng Anh trước**; file tải lên < 10 MB (nén 2-pass).
-10. **Git:** repo chỉ chứa code, kịch bản, tài liệu; không có mp4/wav/ảnh/`node_modules`. **Máy mới chưa đăng nhập GitHub thì chạy `git push` trong tab Terminal của người dùng** (Git Credential Manager mở trình duyệt); chạy từ shell của Claude sẽ báo "could not read Username".
+9. **Mỗi video có thumbnail cuốn hút** (chọn 1 khung ấn tượng nhất, chữ to có viền; làm bằng `banhxeo40/thumb.js`, chi tiết trong `CLAUDE.md` mục Đăng bài) và tải lên cùng lúc đăng.
+10. **Đăng bài bằng Claude in Chrome** (Chrome của người dùng), tiêu đề/mô tả song ngữ, **tiếng Anh trước**; file tải lên < 10 MB (nén 2-pass).
+11. **Git:** repo chỉ chứa code, kịch bản, tài liệu; không có mp4/wav/ảnh/`node_modules`. **Máy mới chưa đăng nhập GitHub thì chạy `git push` trong tab Terminal của người dùng** (Git Credential Manager mở trình duyệt); chạy từ shell của Claude sẽ báo "could not read Username".
 
 ## Chạy một video
 

@@ -13,6 +13,11 @@ Mẫu mục:
 
 ---
 
+## Thumbnail bánh xèo 40s (19/11/2026): quy tắc "mỗi video một ảnh ấn tượng nhất"
+- Khung chọn: **23.75 s** (bánh vừa nứt, tôm đỏ + thịt lộ ra, hơi nóng, vụn giòn). Khung 24.2 s (macro quá gần) làm phần nhân thành mảng trừu tượng nên bỏ. Khi chọn: rút contact sheet 6 khung quanh khoảnh khắc "đã nhất" rồi mới chọn.
+- Chữ "GIÒN RỤM!" ban đầu 215 px tràn khỏi khung 1080 → `outlined()` giờ tự thu nhỏ theo `maxW`. Luôn Read ảnh sau khi tạo.
+- Shorts trên Studio máy tính **có** ô tải thumbnail tùy chỉnh (mục Thumbnail → `(file input)`); đã tải bản dọc 1080×1920 (1.8 MB) và Save thành công. Chưa kiểm tra thumbnail hiển thị thế nào trong feed Shorts trên điện thoại.
+
 ## Đăng YouTube bằng Claude in Chrome (19/11/2026, bánh xèo 40s)
 - Chạy suôn: `studio.youtube.com/channel/UCqg4Ipce2Li0nn43_1eXwHg/videos/upload?d=ud` → `find` ô `file input` → `file_upload` bản `*-up.mp4` (<10 MB) → tiêu đề (triple_click rồi gõ) → mô tả → bấm vùng trống để tắt popup hashtag → `find` radio "No, it's not made for kids" + "Show more" → `find` "No, AI wasn't used" + ô Tags (gõ có dấu phẩy cuối) → Next ×3 → Public → Publish → link ở hộp "Video published".
 - Gõ mô tả dài báo timeout CDP 30 s nhưng **vẫn gõ xong**; đợi vài giây rồi chụp lại kiểm. Cờ 🇬🇧/🇻🇳 hiện thành chữ "GB/VN" trên Windows (không sao).
