@@ -17,7 +17,9 @@ Mẫu mục:
 - **Chính sách kiếm tiền: không vi phạm.** Không gậy (3 mức tính năng đều Enabled), không khiếu nại bản quyền, mọi video "không dành cho trẻ em". Mốc: 500 sub + 3M view Shorts/90 ngày (hoặc 3.000 giờ) mở hội viên; 1.000 sub + 10M view Shorts (hoặc 4.000 giờ) mở quảng cáo. Kênh đang 174 sub, ~3.8K view/28 ngày.
 - **Rủi ro còn lại:** (1) 20 video học tiếng Anh cũ (2024, Unlisted) + playlist "Full 300 chủ đề tiếng anh" còn Public, lạc chủ đề; (2) loạt Shorts lịch sử Private cùng một khuôn, đừng mở công khai cả loạt một lúc (dễ bị coi là nội dung lặp/sản xuất hàng loạt); (3) chưa chọn quốc gia cư trú; từ khóa kênh trống; danh mục tải lên mặc định "None"; mô tả kênh còn nhắc pizza/tacos.
 - **Giờ đăng:** xem mục "Giờ đăng" trong CLAUDE.md. Bài học thao tác: ô giờ lịch hẹn phải chọn trong danh sách, và bố cục hộp thoại đổi theo chiều cao khung (730 → 674 px) nên chụp lại ảnh trước khi bấm theo tọa độ.
-- **Chưa làm, chờ người dùng đồng ý rõ:** chuyển 20 video cũ + playlist sang Private (hệ thống chặn khi chưa có chữ "đồng ý"), từ khóa/danh mục/ngôn ngữ mặc định, viết lại mô tả kênh.
+- **Đã làm sau khi người dùng đồng ý ("làm hết"):** 20 video học tiếng Anh cũ + playlist "Full 300 chủ đề tiếng anh" → Private; từ khóa kênh (12 từ khóa món Việt); mặc định tải lên: danh mục Howto & Style, ngôn ngữ video + tiêu đề/mô tả English; kênh mặc định "không dành cho trẻ em"; mô tả kênh viết lại (English trước, 1 đoạn Việt); tạo playlist công khai "Vietnamese Street Food Animated | Món Ngon Việt Nam" gồm 8 Shorts món Việt đã đăng + 7 Shorts đang hẹn (tự hiện khi đăng). **Video mới nên thêm vào playlist này ngay khi đăng.**
+- **Vẫn chờ người dùng:** quốc gia cư trú (Settings → Channel → Basic info), cần họ tự chọn.
+- **Thao tác:** Studio bulk edit hiện hộp "Are you sure?" cần tích ô xác nhận; sau khi chọn hàng loạt thanh công cụ đổi bố cục nên chụp lại ảnh trước khi bấm Edit (lần đầu bấm nhầm "Add to playlist").
 
 ---
 
