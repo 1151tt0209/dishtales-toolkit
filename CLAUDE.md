@@ -30,6 +30,14 @@
 2. **Cập nhật `CLAUDE.md`**: bảng "Video đã làm", nhạc đã dùng (BPM/nhạc cụ), thư viện nhân vật nếu có nhân vật/pose mới.
 3. **Nếu viết được thứ dùng lại** (hàm SFX, helper camera, kiểu chữ): gom vào file chung thay vì copy-paste, ghi vào `LESSONS.md`.
 4. **Commit + push** (`git add -A && git commit && git push`) để repo luôn mới nhất. Không đẩy mp4/wav/ảnh preview.
+5. **Ghi 2–3 "nâng cấp cho video sau"** vào mục "Hàng nâng cấp" đầu `LESSONS.md` (lấy từ chỗ chưa đẹp + số liệu kênh). Video sau **bắt buộc làm ít nhất 2 mục** trong hàng đó và ghi lại đã làm mục nào.
+
+## Mỗi video phải hơn video trước (người dùng dặn 20/11/2026: "video sau chất lượng hơn, hay hơn, thú vị hơn")
+- **Trước khi lên plan:** đọc "Hàng nâng cấp" trong `LESSONS.md`, chọn ≥2 mục đưa vào plan (ghi rõ trong `PLAN-*.md` mục "Nâng cấp lần này"). Mở TikTok Studio / YouTube Studio xem lượt xem các video trước: video nào nhiều view hơn (vd. bún chả nướng Hà Nội 113 view so với 0–2 của nhiều bài khác, 20/11) thì xem nó khác gì (món nổi tiếng, mở đầu, thumbnail, tiêu đề) và học theo.
+- **Mỗi video thêm ít nhất 1 cái MỚI chưa có ở video trước**, chọn trong: góc máy/chuyển cảnh mới (whip pan, match cut theo phách, POV đũa, macro bong bóng sốt), bối cảnh/giờ mới (mưa, chợ sáng, ghe, hẻm đêm có đèn lồng), kiểu gag mới (không lặp "mèo cướp đồ ăn" hay "khách Tây sợ" hai lần liền), nhân vật phụ mới (thêm vào thư viện), nhạc cụ/thể loại mới.
+- **Giữ người xem (retention):** 1.5 s đầu phải có hình món ăn đẹp nhất hoặc câu hỏi gây tò mò (hook), không mở bằng cảnh trống; cứ 2–3 s có thay đổi (cắt cảnh, zoom, chữ, SFX); có 1 "khoảnh khắc đỉnh" (cắn, kéo sợi, sốt chảy) ở khoảng 60–75% thời lượng, im lặng ngắn trước nó; gag sau phải buồn cười hơn gag trước (leo thang).
+- **Cổng chất lượng trước khi render đủ** (xem `--sheet all` và tự chấm từng ý, sửa xong mới render): món ăn đủ khung, không bị cắt đáy đĩa; nhân vật đủ to ở cảnh rộng (≥1/4 chiều cao khung); da/mặt cận cảnh có bóng đổ + má hồng, không phẳng; chữ không đè món chính, nằm trong vùng an toàn; thumbnail dọc **và** ngang đều xem bằng mắt.
+- **Sau khi đăng 1–2 ngày:** ghi lượt xem/like của video vào bảng "Video đã làm" (cột ghi chú) để lần sau so sánh, biết kiểu nào hiệu quả.
 
 **Ưu tiên cao nhất: âm thanh theo kiểu `banhmi/audio.js`** (người dùng rất thích, 19/11/2026). Mỗi video mới: lập cue sheet từng giây theo sự kiện trên hình, mỗi hành động một tiếng riêng, pan theo chuyển động, duck nhạc dưới SFX, im lặng trước cú cắn, và để người dùng nghe thử trước khi đăng.
 

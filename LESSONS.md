@@ -13,6 +13,18 @@ Mẫu mục:
 
 ---
 
+## Hàng nâng cấp cho video sau (đọc trước khi lên plan; làm ≥2 mục, xong thì gạch và ghi tên video đã làm)
+- [ ] **Da/mặt cận cảnh có khối:** thêm bóng đổ dưới cằm/mũi, má hồng, highlight trán (cút lộn: da nhân vật cận cảnh còn phẳng).
+- [ ] **Nhân vật đủ to ở cảnh rộng** (cút lộn s13 nhân vật quá nhỏ): ≥1/4 chiều cao khung.
+- [ ] **Không cắt đáy đĩa/món** ở cảnh cuối (cút lộn s14): kiểm ở `--sheet all`.
+- [ ] **Tham số hóa `thumb.js`** (chữ, toạ độ lấp lánh, crop ngang qua argv hoặc `thumb.json`) để khỏi sót chữ của video trước; sửa crop bản ngang để chữ không đè món.
+- [ ] **Hook 1.5 s đầu mạnh hơn:** mở bằng cận cảnh món đẹp nhất (sốt chảy, hơi nóng) hoặc câu hỏi "Would you eat this?" rồi mới vào tựa đề.
+- [ ] **Gag mới, không lặp:** cút lộn đã dùng "khách sợ xỉu" + "mèo cướp"; video sau thử kiểu khác (khách gọi nhầm món, cay quá phun lửa, chủ quán biểu diễn tung chảo, trẻ con ăn giỏi hơn khách...).
+- [ ] **Chuyển cảnh mới theo phách:** match cut (vỏ trứng → mặt trăng, chảo → vô lăng...), whip pan có tiếng whoosh.
+- [ ] **Ghi số liệu kênh:** sau 1–2 ngày ghi view/like của cút lộn xào me vào CLAUDE.md, so với bún chả nướng (113 view) để biết món/kiểu mở đầu nào hút hơn.
+
+---
+
 ## Cút lộn xào me (`cutlonxaome/`, 60.000 s, 20/11/2026): công thức bước + 2 gag, phiên bản làm trên ổ C
 - **Cách làm:** plan `PLAN-cut-lon-xao-me.md` (14 cảnh, lưới 128 BPM: 128 phách = đúng 60.000 s, CUTS theo phách) → 3 agent vẽ song song theo chủ sở hữu cảnh (A: s1–s5, B: s6–s9, C: s10–s14, `shots.js` chọn theo số cảnh) + 1 agent âm thanh (`_score.txt` bảng CUES, chỉ cột đầu là giờ). Mốc sự kiện các agent báo về khớp bảng CUES nên âm thanh không phải chỉnh lại. Toàn bộ chữ ở `overlay.js`.
 - **Âm thanh (đo bằng `audio_measure.js`):** khoảng lặng tuyệt đối 42.656–43.125, cú cắn 43.125 to nhất, peak −1.8 dBTP, 60.0000 s. Chưa ai nghe bằng tai: người dùng nghe thử trước khi đăng.
