@@ -13,6 +13,20 @@ Mẫu mục:
 
 ---
 
+## Cút lộn xào me (`cutlonxaome/`, 60.000 s, 20/11/2026): công thức bước + 2 gag, phiên bản làm trên ổ C
+- **Cách làm:** plan `PLAN-cut-lon-xao-me.md` (14 cảnh, lưới 128 BPM: 128 phách = đúng 60.000 s, CUTS theo phách) → 3 agent vẽ song song theo chủ sở hữu cảnh (A: s1–s5, B: s6–s9, C: s10–s14, `shots.js` chọn theo số cảnh) + 1 agent âm thanh (`_score.txt` bảng CUES, chỉ cột đầu là giờ). Mốc sự kiện các agent báo về khớp bảng CUES nên âm thanh không phải chỉnh lại. Toàn bộ chữ ở `overlay.js`.
+- **Âm thanh (đo bằng `audio_measure.js`):** khoảng lặng tuyệt đối 42.656–43.125, cú cắn 43.125 to nhất, peak −1.8 dBTP, 60.0000 s. Chưa ai nghe bằng tai: người dùng nghe thử trước khi đăng.
+- **Nén:** `-b:v 1100k` 2-pass + aac 96k → 9.06 MB (<10 MB). Bản full 55 MB chỉ để xem.
+- **Lưu ý quy trình:** `thumb.js` cứng chữ của video trước (KÉO SỢI…); phải sửa chữ + tọa độ lấp lánh mỗi video. Lần sau nên tham số hóa chữ qua argv/json. Khung thumbnail chọn: đĩa trứng s7 ở 25.0 s (rõ món, rau răm), dải đỏ EN "STIR-FRIED BALUT EGGS". Bản ngang 1280×720 bị chữ che phần trên chùm trứng, cân nhắc crop thấp hơn.
+- **Chỗ chưa đẹp:** da nhân vật ở cận cảnh còn phẳng, nhân vật s13 nhỏ, đĩa bị cắt đáy ở s14.
+- **Tách gọi lại được:** `cl_food.js` (`cutLon`, `eggCap`, `ramLeaf`, `cutLonPlate`, `eggPos`) cho các món trứng/đĩa; `b_props.js` (tay, đũa, chảo, lửa, mèo, sạp).
+- **Đã đăng 3 kênh (20/11/2026, người dùng dặn public luôn, không hẹn giờ):** YouTube Shorts https://youtube.com/shorts/VvAiHgvsNnA, TikTok @hoainiemxuacu12, Facebook Reel trang Dish Tales. Cả ba dùng chung `cutlonxaome-up.mp4` (9.06 MB) vì `file_upload` của Claude in Chrome giới hạn ~10 MB.
+- **Bẫy YouTube Studio:** (1) đừng để hashtag trong tiêu đề: gõ `#shorts` làm hiện dropdown gợi ý và tự đổi thành `#shortsvideo`; hashtag chỉ để ở mô tả. (2) Gõ mô tả bằng click toạ độ mù đã rơi vào ô Tiêu đề (980/100): luôn dùng `find` lấy ref ô Title và ô Description, kiểm tra bộ đếm ký tự. Tiêu đề thật đã đăng: `Stir-Fried Balut Eggs in Tamarind Sauce | Cút Lộn Xào Me | Saigon Night Street Food` (khác dòng title có emoji + #shorts trong `metadata.md`).
+- **Bẫy Facebook Reels** (`facebook.com/reels/create`): ref nút "Thêm video" là `div` nên `file_upload` báo "Element is not a file input"; phải `find "input type=file accept video"` lấy đúng ref thẻ input. Luồng: thêm video → caption → Tiếp → Đăng (đối tượng Công khai, tắt nhãn AI). `javascript_tool` bị chặn khi trả URL có query string, lấy link reel từ `tabs_context_mcp`.
+- **TikTok Studio:** bài mới hiện "đang được xét duyệt / Chỉ mình tôi" khoảng 30 giây rồi tự thành "Mọi người"; đã kiểm lại ở trang Bài đăng. Gõ caption bằng phím, không dùng `execCommand`. Lấy link bài bằng `a[href*="/video/"]` trong danh sách.
+
+---
+
 ## Bánh bò nướng lá dứa (`banhbo/`, 62 s, 19/11/2026): video đầu tiên làm đúng công thức "bước + 2 gag + cảnh sao"
 - **Cách làm (mất ~1 giờ):** viết `PLAN-banh-bo-nuong.md` trước (bảng 14 cảnh trên lưới 104 BPM, **cột "mốc sự kiện" theo giây dùng chung cho hình và tiếng**), rồi 3 agent Opus chạy song song: A = cảnh quy trình (s2–s6), B = bánh + gag + xé + cắn + CTA (s1, s7–s14, tự viết `bb_cake.js`), C = âm thanh. Chữ viết sẵn trong `overlay.js` từ bảng cảnh. A và B chốt trước điểm nối: s6 kết ở khuôn tại (540,1000) bán kính 300, s7 bắt đầu đúng chỗ đó. Gửi cho B thông tin palette Cô Út (`P.PURPLE`) sau khi A xong, nếu không áo đổi màu giữa các cảnh.
 - **Agent âm thanh (C) làm tốt:** mọi mốc ở một bảng `CUE` đầu `_score.txt` → hình đổi 0.1 s thì sửa một dòng. Cú cắn 46.731 to nhất phim (khoảng lặng tuyệt đối 46.154–46.731) mà **không cần soft-clip**: limiter chỉ ăn 0.7 dB. Tổng thể −18.3 LUFS (nhỏ hơn mức −14 thường gặp cho Shorts, chấp nhận để giữ cú cắn). Chưa ai nghe bằng tai: người dùng nghe thử file trước giờ hẹn.
